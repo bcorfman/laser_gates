@@ -24,7 +24,7 @@ test:
 	uv run pytest
 
 run: 
-	uv run python main.py
+	uv run python game.py
 
 lint:
 	uv tool run ruff check -q

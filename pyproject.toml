@@ -1,12 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "laser_gates"
 version = "0.1.0"
 description = "A port of the Imagic game using Arcade 3.x and ArcadeActions"
-authors = [{name = "Brandon Corfman", email = "bcorfman1@gmail.com"}]
+authors = [
+    {name = "Brandon Corfman", email = "teacup_canny.5l@icloud.com"}
+]
 license = {file="LICENSE"}
 readme = "README.md"
 requires-python = ">= 3.13"
 dependencies = [
+    "arcade-actions>=0.6",
 ]
 
 [tool.uv]
@@ -28,7 +35,7 @@ source = ["core"]
 [tool.ruff]
 line-length = 120
 fix = true
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.format]
 quote-style = "double"
