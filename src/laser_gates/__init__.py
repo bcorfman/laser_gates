@@ -1,0 +1,1 @@
+"""Laser Gates game package."""
