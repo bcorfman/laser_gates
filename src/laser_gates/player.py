@@ -5,18 +5,15 @@ from collections.abc import Callable
 import arcade
 from actions import Action, infinite, move_until
 
+from . import logic
 from .config import (
     HILL_WIDTH,
-    PLAYER_SHIP_FIRE_SPEED,
-    PLAYER_SHIP_HORIZ,
-    PLAYER_SHIP_VERT,
     SHIP,
     SHIP_LEFT_BOUND,
     SHIP_RIGHT_BOUND,
     TUNNEL_VELOCITY,
     TUNNEL_WALL_HEIGHT,
     WINDOW_HEIGHT,
-    WINDOW_WIDTH,
 )
 from .contexts import PlayerContext
 from .utils import handle_hill_collision
@@ -39,31 +36,21 @@ class PlayerShip(arcade.Sprite):
         # Input state for velocity provider
         self._input = {"left": False, "right": False, "up": False, "down": False}
 
+        # Create the initial movement action
+        self._create_movement_action()
+
+    def _create_movement_action(self):
+        """Create the movement action with velocity provider and boundary handlers."""
+
         def velocity_provider():
-            # Manual control takes priority
-            h = 0
-            v = 0
+            # Delegate velocity decision to pure logic function
+            class _Input:
+                left = self._input["left"]
+                right = self._input["right"]
+                up = self._input["up"]
+                down = self._input["down"]
 
-            if self._input["right"] and not self._input["left"]:
-                h = PLAYER_SHIP_HORIZ
-            elif self._input["left"] and not self._input["right"]:
-                h = -PLAYER_SHIP_HORIZ
-
-            if self._input["up"] and not self._input["down"]:
-                v = PLAYER_SHIP_VERT
-            elif self._input["down"] and not self._input["up"]:
-                v = -PLAYER_SHIP_VERT
-
-            if h or v:
-                # Respect left boundary: no further left when already at edge
-                if h < 0 and self.left <= SHIP_LEFT_BOUND:
-                    h = 0
-                return (h, v)
-
-            # Drift when idle: same as tunnel, unless at left wall
-            if self.left <= SHIP_LEFT_BOUND:
-                return (0, 0)
-            return (TUNNEL_VELOCITY, 0)
+            return logic.calculate_player_velocity(_Input, self.left)
 
         def on_boundary_enter(sprite, axis, side):
             if axis == "x" and side == "right":
@@ -75,7 +62,7 @@ class PlayerShip(arcade.Sprite):
                 self.speed_factor = 1
                 self.ctx.set_tunnel_velocity(TUNNEL_VELOCITY)
 
-        # Single long-lived action for all movement
+        # Create movement action
         move_until(
             self,
             velocity=(0, 0),  # ignored when velocity_provider is present
@@ -105,6 +92,8 @@ class PlayerShip(arcade.Sprite):
         if handle_hill_collision(self, hill_collision_lists, self.ctx.register_damage):
             # Stop current movement if we hit hills
             Action.stop_actions_for_target(self, tag="player_move")
+            # Recreate the movement action so the ship can move again
+            self._create_movement_action()
 
     def fire_when_ready(self):
         can_fire = len(self.ctx.shot_list) == 0
@@ -120,7 +109,7 @@ class PlayerShip(arcade.Sprite):
         else:
             shot.right = self.left
         shot.center_y = self.center_y
-        shot_vel_x = PLAYER_SHIP_FIRE_SPEED * self.direction
+        shot_vel_x = logic.calculate_shot_velocity(self.direction)
 
         move_until(
             shot,
@@ -136,7 +125,7 @@ class PlayerShip(arcade.Sprite):
             return True  # Condition met -> stop action
 
         shot = self.ctx.shot_list[0]
-        off_screen = shot.right < 0 or shot.left > WINDOW_WIDTH
+        off_screen = logic.is_shot_off_screen(shot.left, shot.right)
         hills_hit = arcade.check_for_collision_with_lists(shot, [self.ctx.hill_tops, self.ctx.hill_bottoms])
         return {"off_screen": off_screen, "hills_hit": hills_hit} if off_screen or hills_hit else None
 

@@ -29,7 +29,8 @@ def create_sprite_at_location(file_or_texture, **kwargs):
 
 def handle_hill_collision(sprite, collision_lists, register_damage: Callable[[float], None]):
     """Handle collision with hills by adjusting position and providing visual feedback."""
-    collision_hit = arcade.check_for_collision_with_lists(sprite, collision_lists)
+    # Use CPU-based collision to avoid requiring an active window/context in headless tests
+    collision_hit = arcade.check_for_collision_with_lists(sprite, collision_lists, method=3)
     if not collision_hit:
         return False
 
