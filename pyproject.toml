@@ -23,14 +23,30 @@ dev-dependencies = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov-branch --cov-report term --cov=core"
+addopts = "--cov-branch --cov-report term --cov=laser_gates"
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
 markers=["unit: Unit tests.",
          "system: System (browser-based) tests."]
          
 [tool.coverage.run]
-source = ["core"]
+source = ["laser_gates"]
+omit = [
+    "src/laser_gates/app.py",
+    "src/laser_gates/contexts.py",
+    "src/laser_gates/player.py",
+    "src/laser_gates/view.py",
+    "src/laser_gates/waves.py",
+]
+
+[tool.coverage.report]
+omit = [
+    "src/laser_gates/app.py",
+    "src/laser_gates/contexts.py",
+    "src/laser_gates/player.py",
+    "src/laser_gates/view.py",
+    "src/laser_gates/waves.py",
+]
 
 [tool.ruff]
 line-length = 120
