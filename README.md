@@ -1,1 +1,1 @@
-# laser_gates
+# Laser Gates
