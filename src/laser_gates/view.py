@@ -44,6 +44,9 @@ class Tunnel(arcade.View):
         self.setup_hills()
         self.setup_ship()
 
+        # Don't show the mouse cursor
+        self.window.set_mouse_visible(False)
+
         # Wave classes that can be instantiated
         self.wave_classes = [ThinDensePackWave, ThickDensePackWave]
 
@@ -220,6 +223,7 @@ class Tunnel(arcade.View):
         if key == arcade.key.LCTRL or modifiers == arcade.key.MOD_CTRL:
             self.fire_pressed = True
         if key == arcade.key.ESCAPE:
+            self.window.set_mouse_visible(True)
             self.window.close()
 
     def on_key_release(self, key: int, modifiers: int):
