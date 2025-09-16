@@ -241,13 +241,18 @@ class Tunnel(arcade.View):
     def on_hide_view(self):
         """Called when this view is hidden or switched away from."""
         # Restore mouse cursor when view is hidden
-        self.window.set_mouse_visible(True)
+        try:
+            if self.window:
+                self.window.set_mouse_visible(True)
+        except (AttributeError, RuntimeError):
+            # Window might be closed or invalid, ignore cursor restoration errors
+            pass
 
     def __del__(self):
         """Destructor to ensure cursor is restored if view is destroyed unexpectedly."""
         # Only restore cursor if window still exists and is valid
         try:
-            if self.window and not self.window.is_closed:
+            if self.window:
                 self.window.set_mouse_visible(True)
         except (AttributeError, RuntimeError):
             # Window might be closed or invalid, ignore cursor restoration errors
