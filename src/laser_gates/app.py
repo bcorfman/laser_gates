@@ -23,4 +23,12 @@ class LaserGates(arcade.Window):
 def run():
     """Run the Laser Gates game."""
     window = LaserGates()
-    arcade.run()
+    try:
+        arcade.run()
+    finally:
+        # Ensure mouse cursor is restored even if the game exits unexpectedly
+        try:
+            window.set_mouse_visible(True)
+        except (AttributeError, RuntimeError):
+            # Window might be closed or invalid, ignore cursor restoration errors
+            pass
