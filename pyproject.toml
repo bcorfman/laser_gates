@@ -13,14 +13,18 @@ license = {file="LICENSE"}
 readme = "README.md"
 requires-python = ">= 3.13"
 dependencies = [
-    "arcade-actions>=0.6",
+    "arcade-actions>=0.7",
 ]
 
 [tool.uv]
 dev-dependencies = [
+    "arcade-actions",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]
+
+[tool.uv.sources]
+arcade-actions = { path = "../arcade_actions", editable = true }
 
 [tool.pytest.ini_options]
 addopts = "--cov-branch --cov-report term --cov=laser_gates"

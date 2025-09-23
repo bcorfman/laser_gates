@@ -84,3 +84,41 @@ def handle_hill_collision(sprite, collision_lists, register_damage: Callable[[fl
     register_damage(0.3)
 
     return True
+
+
+def create_forcefield_textures():
+    """
+    Build a list of textures rolled by 0..H-1 pixels using Arcade's render-to-texture.
+    Implementation notes:
+        - We render into a RenderTexture of the same size.
+        - To achieve a vertical wrap/roll by 'y' pixels, we draw the base texture twice:
+            1) at bottom = -y
+            2) at bottom = SPRITE_H - y
+        so the part that scrolls off the bottom reappears at the top.
+        - We then snapshot the render target to an image via rt.get_image()
+        and construct an arcade.Texture from that image — all via Arcade API.
+    """
+
+    SPRITE_W, SPRITE_H = 35, 109
+    PNG_PATH = "res/forcefield.png"
+    base_tex = arcade.load_texture(PNG_PATH)
+    frames = []
+
+    # A single reusable render target; we overwrite it for each frame
+    rt = arcade.RenderTexture(SPRITE_W, SPRITE_H)
+
+    for y in range(SPRITE_H):
+        # Render into offscreen target
+        with arcade.render_target(rt):
+            arcade.start_render()
+            # Draw first copy shifted down by y
+            arcade.draw_lrwh_rectangle_textured(0, -y, SPRITE_W, SPRITE_H, base_tex)
+            # Draw wrapped copy
+            arcade.draw_lrwh_rectangle_textured(0, SPRITE_H - y, SPRITE_W, SPRITE_H, base_tex)
+
+        # Snapshot the RT back to an image (Arcade API) and make a texture
+        img = rt.get_image()  # returns a PIL Image internally, but we never import PIL
+        tex = arcade.Texture(f"roll_{y}", image=img)
+        frames.append(tex)
+
+    return frames
