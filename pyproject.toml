@@ -18,13 +18,12 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = [
-    "arcade-actions",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]
 
-[tool.uv.sources]
-arcade-actions = { path = "../arcade_actions", editable = true }
+[project.optional-dependencies]
+devarc = ["arcade-actions @ git+https://github.com/bcorfman/arcade_actions@main"]
 
 [tool.pytest.ini_options]
 addopts = "--cov-branch --cov-report term --cov=laser_gates"

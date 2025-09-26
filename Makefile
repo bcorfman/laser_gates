@@ -13,7 +13,8 @@ install:
 
 devinstall:
 	uv python pin $(PYTHON_VERSION)
-	uv sync --all-extras --dev
+	uv lock -extra devarc
+	uv sync --extra devarc
 
 tools:
 	uv tool install ruff --force
