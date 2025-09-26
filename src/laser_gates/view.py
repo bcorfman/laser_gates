@@ -63,6 +63,16 @@ class Tunnel(arcade.View):
     def _start_random_wave(self):
         self._wave_strategy = random.choice(self.wave_objects)
         self._wave_sprites = self._wave_strategy.build(self._ctx)
+        # Set up z-order for drawing
+        self.to_draw = [
+            (10, self.tunnel_walls),
+            (20, self.hill_tops),
+            (30, self.hill_bottoms),
+            (40, self.player_list),
+            (50, self.shot_list),
+        ]
+        self.to_draw.extend(self._wave_strategy.add_draw_order())
+        self.to_draw.sort()
 
     def _wave_finished(self, wave):
         """Callback when a wave signals it is finished.
@@ -169,9 +179,8 @@ class Tunnel(arcade.View):
         self.hill_bottoms.update()
         self.player_list.update()
         self.shot_list.update()
-        self._wave_sprites.update()
         if self._wave_strategy:
-            self._wave_strategy.update(self._wave_sprites, self._ctx, delta_time)
+            self._wave_strategy.update(self._ctx)
         self.ship.move(self.left_pressed, self.right_pressed, self.up_pressed, self.down_pressed)
         if self.fire_pressed:
             self.ship.fire_when_ready()
@@ -183,12 +192,8 @@ class Tunnel(arcade.View):
     def on_draw(self):
         self.background_color = arcade.color.BLACK
         self.clear()
-        self._wave_sprites.draw()
-        self.tunnel_walls.draw()
-        self.hill_tops.draw()
-        self.hill_bottoms.draw()
-        self.player_list.draw()
-        self.shot_list.draw()
+        for _, sl in self.to_draw:
+            sl.draw()
 
         # Draw flash overlay last so it appears over everything
         if self.damage_flash > 0:
