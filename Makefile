@@ -9,11 +9,11 @@ setup:
 
 install:
 	uv python pin $(PYTHON_VERSION)
-	uv sync --no-dev
+	uv sync --no-dev --frozen
 
 devinstall:
 	uv python pin $(PYTHON_VERSION)
-	uv lock -extra devarc
+	uv lock --extra devarc
 	uv sync --extra devarc
 
 tools:

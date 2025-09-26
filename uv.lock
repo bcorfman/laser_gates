@@ -20,29 +20,12 @@ wheels = [
 [[package]]
 name = "arcade-actions"
 version = "0.8"
-source = { editable = "../arcade_actions" }
+source = { git = "https://github.com/bcorfman/arcade_actions?rev=main#9299e8618edcbd973eb1b879beeb25016c25d07e" }
 dependencies = [
     { name = "arcade" },
     { name = "pyglet" },
     { name = "pysdl2" },
     { name = "screeninfo" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "arcade", specifier = ">=3.0.0.dev35" },
-    { name = "pyglet", specifier = ">=2.1.dev5" },
-    { name = "pysdl2", specifier = ">=0.9.16" },
-    { name = "screeninfo", specifier = ">=0.8.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "build", specifier = ">=1.2.2.post1" },
-    { name = "pytest", specifier = ">=8.3.3" },
-    { name = "pytest-cov", specifier = ">=5.0.0" },
-    { name = "ruff", specifier = ">=0.12.0" },
-    { name = "uv", specifier = ">=0.7.16" },
 ]
 
 [[package]]
@@ -191,19 +174,26 @@ dependencies = [
     { name = "arcade-actions" },
 ]
 
+[package.optional-dependencies]
+devarc = [
+    { name = "arcade-actions" },
+]
+
 [package.dev-dependencies]
 dev = [
-    { name = "arcade-actions" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "arcade-actions", editable = "../arcade_actions" }]
+requires-dist = [
+    { name = "arcade-actions", specifier = ">=0.7" },
+    { name = "arcade-actions", marker = "extra == 'devarc'", git = "https://github.com/bcorfman/arcade_actions?rev=main" },
+]
+provides-extras = ["devarc"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "arcade-actions", editable = "../arcade_actions" },
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
 ]
