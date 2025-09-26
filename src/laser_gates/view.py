@@ -47,8 +47,7 @@ class Tunnel(arcade.View):
         # Don't show the mouse cursor
         self.window.set_mouse_visible(False)
 
-        # Wave classes that can be instantiated
-        self.wave_classes = [ThinDensePackWave, ThickDensePackWave]
+        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave()]  # , FlashingForcefieldWave()]
 
         # Create context for waves
         self._ctx = WaveContext(
@@ -62,12 +61,8 @@ class Tunnel(arcade.View):
         self._start_random_wave()
 
     def _start_random_wave(self):
-        if not self.wave_classes:
-            return
-        self._wave_sprites.clear()
-        wave_cls = random.choice(self.wave_classes)
-        self._wave_strategy = wave_cls()
-        self._wave_strategy.build(self._wave_sprites, self._ctx)
+        self._wave_strategy = random.choice(self.wave_objects)
+        self._wave_sprites = self._wave_strategy.build(self._ctx)
 
     def _wave_finished(self, wave):
         """Callback when a wave signals it is finished.
@@ -80,7 +75,7 @@ class Tunnel(arcade.View):
         # Also stop any extra references kept in the wave's local list (defensive)
         for action in wave.actions:
             action.stop()
-        self._wave_strategy = None
+        self._wave_strategy.cleanup(self._ctx)
         self._start_random_wave()
 
     def _flash_damage(self, amount: float):

@@ -43,7 +43,7 @@ class SpritePool:
             sprite = factory()
             self.inactive.append(sprite)
 
-    def acquire(self, n: int) -> list[arcade.Sprite]:
+    def acquire(self, n: int) -> arcade.SpriteList:
         """Acquire n sprites from the pool.
 
         Args:
@@ -59,7 +59,7 @@ class SpritePool:
             raise RuntimeError(f"pool exhausted: requested {n}, available {len(self.inactive)}")
 
         # Move sprites from inactive to active
-        sprites = []
+        sprites = arcade.SpriteList()
         for _ in range(n):
             sprite = self.inactive.pop(0)
             self.active.append(sprite)
