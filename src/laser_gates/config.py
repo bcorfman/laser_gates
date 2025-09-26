@@ -10,6 +10,7 @@ WINDOW_HEIGHT = 432
 HILL_SLICES = ["./res/hill_slice1.png", "./res/hill_slice2.png", "./res/hill_slice3.png", "./res/hill_slice4.png"]
 SHIP = "./res/dart.png"
 PLAYER_SHOT = ":resources:/images/space_shooter/laserRed01.png"
+FORCEFIELD = "./res/forcefield.png"
 
 # Player ship configuration
 PLAYER_SHIP_VERT = 5

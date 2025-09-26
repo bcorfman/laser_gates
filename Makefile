@@ -9,12 +9,12 @@ setup:
 
 install:
 	uv python pin $(PYTHON_VERSION)
-	uv sync --frozen --no-dev
+	uv sync --no-dev --frozen
 
 devinstall:
 	uv python pin $(PYTHON_VERSION)
-	uv add pytest pytest-cov --dev
-	uv sync --all-extras --dev
+	uv lock --extra devarc
+	uv sync --extra devarc
 
 tools:
 	uv tool install ruff --force

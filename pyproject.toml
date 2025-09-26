@@ -13,7 +13,7 @@ license = {file="LICENSE"}
 readme = "README.md"
 requires-python = ">= 3.13"
 dependencies = [
-    "arcade-actions>=0.6",
+    "arcade-actions>=0.7",
 ]
 
 [tool.uv]
@@ -21,6 +21,9 @@ dev-dependencies = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]
+
+[project.optional-dependencies]
+devarc = ["arcade-actions @ git+https://github.com/bcorfman/arcade_actions@main"]
 
 [tool.pytest.ini_options]
 addopts = "--cov-branch --cov-report term --cov=laser_gates"
@@ -74,3 +77,6 @@ select = [
     "I",
 ]
 extend-fixable = ["E", "F", "UP", "B", "SIM", "I"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
