@@ -291,13 +291,16 @@ class TestCreateRolledTextures(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Set up arcade window once for all tests."""
-        arcade.open_window(100, 100, "Test")
+        """Set up for tests - no window needed for texture manipulation tests."""
+        # These tests don't actually need a window since they only manipulate
+        # texture pixel data, not render anything. Skip window creation to
+        # avoid flashing windows and CI issues.
+        cls._window_opened = False
 
     @classmethod
     def tearDownClass(cls):
-        """Clean up arcade window."""
-        arcade.close_window()
+        """Clean up - nothing to do since no window was opened."""
+        pass
 
     def setUp(self):
         """Set up test fixtures."""
