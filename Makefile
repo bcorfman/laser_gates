@@ -13,6 +13,7 @@ install:
 
 devinstall:
 	uv python pin $(PYTHON_VERSION)
+	uv lock --upgrade-package arcade-actions
 	uv sync --extra devarc
 
 tools:

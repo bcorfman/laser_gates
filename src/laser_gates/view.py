@@ -18,7 +18,7 @@ from .config import (
 from .contexts import PlayerContext, WaveContext
 from .player import PlayerShip
 from .utils import create_sprite_at_location, create_tunnel_wall
-from .waves import ThickDensePackWave, ThinDensePackWave
+from .waves import FlashingForcefieldWave, ThickDensePackWave, ThinDensePackWave
 
 
 class Tunnel(arcade.View):
@@ -44,12 +44,8 @@ class Tunnel(arcade.View):
         self.setup_hills()
         self.setup_ship()
 
-        # Don't show the mouse cursor
         self.window.set_mouse_visible(False)
-
-        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave()]  # , FlashingForcefieldWave()]
-
-        # Create context for waves
+        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave(), FlashingForcefieldWave()]
         self._ctx = WaveContext(
             shot_list=self.shot_list,
             player_ship=self.ship,
@@ -80,11 +76,6 @@ class Tunnel(arcade.View):
         Stops all actions associated with *wave* to ensure they no longer
         run once the wave has been cleaned up.
         """
-        # Stop movement actions tied to the current wave's sprite list
-        Action.stop_actions_for_target(self._wave_sprites, tag="shield_move")
-        # Also stop any extra references kept in the wave's local list (defensive)
-        for action in wave.actions:
-            action.stop()
         self._wave_strategy.cleanup(self._ctx)
         self._start_random_wave()
 
