@@ -20,7 +20,7 @@ wheels = [
 [[package]]
 name = "arcade-actions"
 version = "0.8"
-source = { git = "https://github.com/bcorfman/arcade_actions?rev=main#9299e8618edcbd973eb1b879beeb25016c25d07e" }
+source = { git = "https://github.com/bcorfman/arcade_actions?rev=main#60b9d54a32ecaa902fbb725b31066bcf56bb49c9" }
 dependencies = [
     { name = "arcade" },
     { name = "pyglet" },

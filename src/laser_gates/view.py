@@ -18,7 +18,7 @@ from .config import (
 from .contexts import PlayerContext, WaveContext
 from .player import PlayerShip
 from .utils import create_sprite_at_location, create_tunnel_wall
-from .waves import ThickDensePackWave, ThinDensePackWave
+from .waves import FlashingForcefieldWave, ThickDensePackWave, ThinDensePackWave
 
 
 class Tunnel(arcade.View):
@@ -44,12 +44,8 @@ class Tunnel(arcade.View):
         self.setup_hills()
         self.setup_ship()
 
-        # Don't show the mouse cursor
         self.window.set_mouse_visible(False)
-
-        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave()]  # , FlashingForcefieldWave()]
-
-        # Create context for waves
+        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave(), FlashingForcefieldWave()]
         self._ctx = WaveContext(
             shot_list=self.shot_list,
             player_ship=self.ship,
@@ -63,6 +59,16 @@ class Tunnel(arcade.View):
     def _start_random_wave(self):
         self._wave_strategy = random.choice(self.wave_objects)
         self._wave_sprites = self._wave_strategy.build(self._ctx)
+        # Set up z-order for drawing
+        self.to_draw = [
+            (10, self.tunnel_walls),
+            (20, self.hill_tops),
+            (30, self.hill_bottoms),
+            (40, self.player_list),
+            (50, self.shot_list),
+        ]
+        self.to_draw.extend(self._wave_strategy.add_draw_order())
+        self.to_draw.sort()
 
     def _wave_finished(self, wave):
         """Callback when a wave signals it is finished.
@@ -70,11 +76,6 @@ class Tunnel(arcade.View):
         Stops all actions associated with *wave* to ensure they no longer
         run once the wave has been cleaned up.
         """
-        # Stop movement actions tied to the current wave's sprite list
-        Action.stop_actions_for_target(self._wave_sprites, tag="shield_move")
-        # Also stop any extra references kept in the wave's local list (defensive)
-        for action in wave.actions:
-            action.stop()
         self._wave_strategy.cleanup(self._ctx)
         self._start_random_wave()
 
@@ -169,9 +170,8 @@ class Tunnel(arcade.View):
         self.hill_bottoms.update()
         self.player_list.update()
         self.shot_list.update()
-        self._wave_sprites.update()
         if self._wave_strategy:
-            self._wave_strategy.update(self._wave_sprites, self._ctx, delta_time)
+            self._wave_strategy.update(self._ctx)
         self.ship.move(self.left_pressed, self.right_pressed, self.up_pressed, self.down_pressed)
         if self.fire_pressed:
             self.ship.fire_when_ready()
@@ -183,12 +183,8 @@ class Tunnel(arcade.View):
     def on_draw(self):
         self.background_color = arcade.color.BLACK
         self.clear()
-        self._wave_sprites.draw()
-        self.tunnel_walls.draw()
-        self.hill_tops.draw()
-        self.hill_bottoms.draw()
-        self.player_list.draw()
-        self.shot_list.draw()
+        for _, sl in self.to_draw:
+            sl.draw()
 
         # Draw flash overlay last so it appears over everything
         if self.damage_flash > 0:

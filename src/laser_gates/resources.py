@@ -97,6 +97,46 @@ class SpritePool:
 TEXTURES = TextureCache()
 
 
+def create_rolled_textures(base_texture: arcade.Texture, num_frames: int = None) -> list[arcade.Texture]:
+    """Create a list of textures where each is rolled down by 1 pixel from the previous.
+
+    Args:
+        base_texture: The original texture to create rolled versions from
+        num_frames: Number of rolled textures to create. If None, creates one for each pixel row
+
+    Returns:
+        List of textures, each rolled down by 1 pixel from the previous
+    """
+    from PIL import Image
+
+    if num_frames is None:
+        num_frames = base_texture.height
+
+    # Get the image data from the base texture
+    image = base_texture.image
+    width, height = image.size
+
+    frames = []
+
+    for y_offset in range(num_frames):
+        # Create a new image with the same size and mode
+        new_image = Image.new(image.mode, (width, height))
+
+        # Roll the image down by y_offset pixels
+        for y in range(height):
+            source_y = (y + y_offset) % height
+            # Copy the entire row
+            for x in range(width):
+                pixel = image.getpixel((x, source_y))
+                new_image.putpixel((x, y), pixel)
+
+        # Create a new texture from the rolled image
+        tex = arcade.Texture(new_image, hash=f"rolled_{y_offset}")
+        frames.append(tex)
+
+    return frames
+
+
 def create_forcefield_textures(path: str) -> list[arcade.Texture]:
     """Create forcefield textures with left/right variations.
 
@@ -104,10 +144,10 @@ def create_forcefield_textures(path: str) -> list[arcade.Texture]:
         path: Path to the base forcefield texture
 
     Returns:
-        List containing the base texture and its horizontally flipped version
+        List containing the rolled textures
     """
     base = TEXTURES.get(path)
-    return [base, base.flip_horizontally()]
+    return create_rolled_textures(base)
 
 
 # Global sprite pools - these will be initialized when needed

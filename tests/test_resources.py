@@ -1,11 +1,14 @@
 """Unit tests for TextureCache and SpritePool."""
 
+import os
+import tempfile
 import unittest
 from unittest.mock import Mock, call, patch
 
 import arcade
+from PIL import Image
 
-from laser_gates.resources import SpritePool, TextureCache
+from laser_gates.resources import SpritePool, TextureCache, create_rolled_textures
 
 
 class TestTextureCache(unittest.TestCase):
@@ -281,6 +284,98 @@ class TestSpritePool(unittest.TestCase):
         self.assertEqual(len(new_sprites), 2)
         self.assertEqual(len(self.pool.active), 2)
         self.assertEqual(len(self.pool.inactive), 3)
+
+
+class TestCreateRolledTextures(unittest.TestCase):
+    """Test the create_rolled_textures function."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up for tests - no window needed for texture manipulation tests."""
+        # These tests don't actually need a window since they only manipulate
+        # texture pixel data, not render anything. Skip window creation to
+        # avoid flashing windows and CI issues.
+        cls._window_opened = False
+
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up - nothing to do since no window was opened."""
+        pass
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Create a temporary image file for testing
+        self.temp_dir = tempfile.mkdtemp()
+        self.test_image_path = os.path.join(self.temp_dir, "test.png")
+
+        # Create a simple 4x4 test image with distinct rows
+        img = Image.new("RGBA", (4, 4), (0, 0, 0, 0))
+        pixels = img.load()
+
+        # Create a pattern that's easy to verify rolling
+        # Row 0: Red pixels
+        for x in range(4):
+            pixels[x, 0] = (255, 0, 0, 255)
+        # Row 1: Green pixels
+        for x in range(4):
+            pixels[x, 1] = (0, 255, 0, 255)
+        # Row 2: Blue pixels
+        for x in range(4):
+            pixels[x, 2] = (0, 0, 255, 255)
+        # Row 3: White pixels
+        for x in range(4):
+            pixels[x, 3] = (255, 255, 255, 255)
+
+        img.save(self.test_image_path)
+        self.base_texture = arcade.load_texture(self.test_image_path)
+
+    def tearDown(self):
+        """Clean up test fixtures."""
+        os.remove(self.test_image_path)
+        os.rmdir(self.temp_dir)
+
+    def test_basic_functionality(self):
+        """Test that the function returns the correct number of textures."""
+        result = create_rolled_textures(self.base_texture, num_frames=2)
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], arcade.Texture)
+        self.assertIsInstance(result[1], arcade.Texture)
+
+    def test_default_num_frames(self):
+        """Test that default num_frames equals texture height."""
+        result = create_rolled_textures(self.base_texture)
+        self.assertEqual(len(result), self.base_texture.height)
+
+    def test_texture_dimensions(self):
+        """Test that output textures have same dimensions as input."""
+        result = create_rolled_textures(self.base_texture, num_frames=1)
+        self.assertEqual(result[0].width, self.base_texture.width)
+        self.assertEqual(result[0].height, self.base_texture.height)
+
+    def test_zero_frames(self):
+        """Test that requesting 0 frames returns empty list."""
+        result = create_rolled_textures(self.base_texture, num_frames=0)
+        self.assertEqual(len(result), 0)
+
+    def test_rolling_behavior(self):
+        """Test that the textures are actually rolled correctly."""
+        result = create_rolled_textures(self.base_texture, num_frames=2)
+
+        # Get the pixel data from the original and rolled textures
+        original_image = self.base_texture.image
+        rolled_1_image = result[1].image  # This should be rolled down by 1 pixel
+
+        # Check that the first row of the rolled texture matches the second row of the original
+        for x in range(4):
+            original_pixel = original_image.getpixel((x, 1))  # Second row of original
+            rolled_pixel = rolled_1_image.getpixel((x, 0))  # First row of rolled
+            self.assertEqual(original_pixel, rolled_pixel, f"Pixel at ({x}, 0) doesn't match")
+
+        # Check that the last row of the rolled texture matches the first row of the original
+        for x in range(4):
+            original_pixel = original_image.getpixel((x, 0))  # First row of original
+            rolled_pixel = rolled_1_image.getpixel((x, 3))  # Last row of rolled
+            self.assertEqual(original_pixel, rolled_pixel, f"Pixel at ({x}, 3) doesn't match")
 
 
 if __name__ == "__main__":
