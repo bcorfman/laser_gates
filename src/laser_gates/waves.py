@@ -165,24 +165,33 @@ class ThickDensePackWave(_DensePackWave):
 class FlashingForcefieldWave(EnemyWave):
     def __init__(self):
         super().__init__()
+        self._total_forcefields = 3
+        self._forcefield_spacing = 200
         self._forcefield_textures = resources.create_forcefield_textures(FORCEFIELD)
-        self._top_forcefield = arcade.SpriteSolidColor(35, HILL_HEIGHT, color=FORCEFIELD_SOLID_COLORS[0])
-        self._bottom_forcefield = arcade.SpriteSolidColor(35, HILL_HEIGHT, color=FORCEFIELD_SOLID_COLORS[0])
-        self._top_mid_forcefield = arcade.Sprite(FORCEFIELD)
-        self._bottom_mid_forcefield = arcade.Sprite(FORCEFIELD)
-        self._forcefields = arcade.SpriteList()
+        self._top_forcefields = arcade.SpriteList()
+        self._bottom_forcefields = arcade.SpriteList()
+        self._top_mid_forcefields = arcade.SpriteList()
+        self._bottom_mid_forcefields = arcade.SpriteList()
+        for _ in range(self._total_forcefields):
+            self._top_forcefields.append(arcade.SpriteSolidColor(35, HILL_HEIGHT, color=FORCEFIELD_SOLID_COLORS[0]))
+            self._bottom_forcefields.append(arcade.SpriteSolidColor(35, HILL_HEIGHT, color=FORCEFIELD_SOLID_COLORS[0]))
+            self._top_mid_forcefields.append(arcade.Sprite(FORCEFIELD))
+            self._bottom_mid_forcefields.append(arcade.Sprite(FORCEFIELD))
+        self._forcefield_sprites = arcade.SpriteList()
         self._current_color_index = 0
         self._num_forcefield_colors = len(FORCEFIELD_SOLID_COLORS)
-        self._forcefields.append(self._top_forcefield)
-        self._forcefields.append(self._top_mid_forcefield)
-        self._forcefields.append(self._bottom_mid_forcefield)
-        self._forcefields.append(self._bottom_forcefield)
+        for i in range(self._total_forcefields):
+            self._forcefield_sprites.append(self._top_forcefields[i])
+            self._forcefield_sprites.append(self._top_mid_forcefields[i])
+            self._forcefield_sprites.append(self._bottom_mid_forcefields[i])
+            self._forcefield_sprites.append(self._bottom_forcefields[i])
         self._forcefields_active = False  # Track whether forcefields are currently active for collisions
 
     def update_color(self):
         self._current_color_index = (self._current_color_index + 1) % self._num_forcefield_colors
-        self._top_forcefield.color = FORCEFIELD_SOLID_COLORS[self._current_color_index]
-        self._bottom_forcefield.color = FORCEFIELD_SOLID_COLORS[self._current_color_index]
+        for i in range(self._total_forcefields):
+            self._top_forcefields[i].color = FORCEFIELD_SOLID_COLORS[self._current_color_index]
+            self._bottom_forcefields[i].color = FORCEFIELD_SOLID_COLORS[self._current_color_index]
 
     def forcefields_on(self, spritelist: arcade.SpriteList):
         self._forcefields_active = True
@@ -192,14 +201,15 @@ class FlashingForcefieldWave(EnemyWave):
 
     def build(self, ctx: WaveContext) -> arcade.SpriteList:
         """Populate enemy sprites and add actions (move_until, etc.)."""
-        self._bottom_forcefield.left = WINDOW_WIDTH + WALL_WIDTH
-        self._bottom_forcefield.bottom = TUNNEL_WALL_HEIGHT
-        self._bottom_mid_forcefield.left = WINDOW_WIDTH + WALL_WIDTH
-        self._bottom_mid_forcefield.bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT
-        self._top_mid_forcefield.left = WINDOW_WIDTH + WALL_WIDTH
-        self._top_mid_forcefield.bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109
-        self._top_forcefield.left = WINDOW_WIDTH + WALL_WIDTH
-        self._top_forcefield.bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109 * 2
+        for i in range(self._total_forcefields):
+            self._bottom_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+            self._bottom_forcefields[i].bottom = TUNNEL_WALL_HEIGHT
+            self._bottom_mid_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+            self._bottom_mid_forcefields[i].bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT
+            self._top_mid_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+            self._top_mid_forcefields[i].bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109
+            self._top_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+            self._top_forcefields[i].bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109 * 2
 
         # Use the player's current speed factor to set initial velocity
         current_velocity = TUNNEL_VELOCITY * ctx.player_ship.speed_factor
@@ -229,11 +239,11 @@ class FlashingForcefieldWave(EnemyWave):
                 condition=infinite,
             ),
         )
-        combined_actions.apply(self._forcefields, tag="forcefield")
+        combined_actions.apply(self._forcefield_sprites, tag="forcefield")
         self._actions.append(combined_actions)
         # Cycle textures on the animated (middle) forcefields
         cycle_top = cycle_textures_until(
-            self._top_mid_forcefield,
+            self._top_mid_forcefields,
             textures=self._forcefield_textures,
             frames_per_second=100,
             direction=-1,
@@ -242,7 +252,7 @@ class FlashingForcefieldWave(EnemyWave):
         )
         self._actions.append(cycle_top)
         cycle_bottom = cycle_textures_until(
-            self._bottom_mid_forcefield,
+            self._bottom_mid_forcefields,
             textures=self._forcefield_textures,
             frames_per_second=100,
             direction=1,
@@ -250,28 +260,28 @@ class FlashingForcefieldWave(EnemyWave):
             tag="forcefield_bottom_mid",
         )
         self._actions.append(cycle_bottom)
-        self._forcefields.visible = True
+        self._forcefield_sprites.visible = True
         self._forcefields_active = True
 
     def add_draw_order(self) -> list[tuple[int, arcade.SpriteList]]:
-        return [(5, self._forcefields)]
+        return [(5, self._forcefield_sprites)]
 
     def update(self, ctx: WaveContext) -> None:
         """Per-frame logic (collision tests, win/loss checks)."""
         # Handle collisions between player shots and the dense pack sprites
-        if not self._forcefields:
+        if not self._forcefield_sprites:
             return
-        self._forcefields.update()
+        self._forcefield_sprites.update()
 
         # Shot collisions - only check when forcefields are active
         if self._forcefields_active:
             for shot in tuple(ctx.shot_list):
-                hits = arcade.check_for_collision_with_list(shot, self._forcefields)
+                hits = arcade.check_for_collision_with_list(shot, self._forcefield_sprites)
                 if hits:
                     shot.remove_from_sprite_lists()  # remove shot immediately
 
         # Player collisions - only check when forcefields are active
-        if self._forcefields_active and arcade.check_for_collision_with_list(ctx.player_ship, self._forcefields):
+        if self._forcefields_active and arcade.check_for_collision_with_list(ctx.player_ship, self._forcefield_sprites):
             ctx.register_damage(1.0)
             ctx.on_cleanup(self)
             return
