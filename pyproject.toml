@@ -13,7 +13,7 @@ license = {file="LICENSE"}
 readme = "README.md"
 requires-python = ">= 3.13"
 dependencies = [
-    "arcade-actions>=0.7",
+    "arcade-actions>=0.8",
 ]
 
 [tool.uv]
