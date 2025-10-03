@@ -45,7 +45,7 @@ class Tunnel(arcade.View):
         self.setup_ship()
 
         self.window.set_mouse_visible(False)
-        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave(), FlashingForcefieldWave()]
+        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave(), FlashingForcefieldWave(3)]
         self._ctx = WaveContext(
             shot_list=self.shot_list,
             player_ship=self.ship,
