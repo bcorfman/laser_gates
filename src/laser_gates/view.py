@@ -3,7 +3,7 @@
 import random
 
 import arcade
-from actions import Action, infinite, move_until
+from actions import Action, MoveYUntil, infinite, move_until
 
 from .config import (
     BOTTOM_BOUNDS,
@@ -18,7 +18,7 @@ from .config import (
 from .contexts import PlayerContext, WaveContext
 from .player import PlayerShip
 from .utils import create_sprite_at_location, create_tunnel_wall
-from .waves import FlashingForcefieldWave, ThickDensePackWave, ThinDensePackWave
+from .waves import FlashingForcefieldWave, FlexingForcefieldWave, ThickDensePackWave, ThinDensePackWave
 
 
 class Tunnel(arcade.View):
@@ -45,7 +45,12 @@ class Tunnel(arcade.View):
         self.setup_ship()
 
         self.window.set_mouse_visible(False)
-        self.wave_objects = [ThinDensePackWave(), ThickDensePackWave(), FlashingForcefieldWave(3)]
+        self.wave_objects = [
+            ThinDensePackWave(),
+            ThickDensePackWave(),
+            FlashingForcefieldWave(3),
+            FlexingForcefieldWave(3),
+        ]
         self._ctx = WaveContext(
             shot_list=self.shot_list,
             player_ship=self.ship,
@@ -113,7 +118,9 @@ class Tunnel(arcade.View):
 
         if self._wave_strategy and self._wave_strategy.actions is not None:
             for action in self._wave_strategy.actions:
-                action.set_current_velocity((speed, 0))
+                # Only update horizontal scroll actions, not vertical bounce actions
+                if not isinstance(action, MoveYUntil):
+                    action.set_current_velocity((speed, 0))
 
     def on_hill_top_wrap(self, sprite, axis, side):
         sprite.position = (HILL_WIDTH * 3, sprite.position[1])
