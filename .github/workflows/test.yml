@@ -75,7 +75,7 @@ jobs:
             exit $rc
           fi
 
-      - name: Run tests with coverage (Linux Python 3.11 only)
+      - name: Run all tests with coverage including OpenGL (Linux Python 3.11 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         env:
           DISPLAY: ':99.0'
