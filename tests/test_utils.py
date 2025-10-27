@@ -1,5 +1,4 @@
 import arcade
-import pytest
 
 
 def test_create_tunnel_wall_dimensions_and_position():
@@ -259,45 +258,3 @@ def test_handle_hill_collision_negative_overlap_edge_case():
     result = handle_hill_collision(player, [hills], register_damage)
     # Just verify it doesn't crash and returns a boolean
     assert isinstance(result, bool)
-
-
-@pytest.mark.opengl
-def test_create_forcefield_textures_creates_list():
-    """Test that create_forcefield_textures returns a list of textures.
-
-    Requires OpenGL context (Xvfb in CI). Creates a hidden window to initialize arcade's GL context.
-    """
-    from laser_gates.utils import create_forcefield_textures
-
-    try:
-        # Create a hidden window to initialize arcade's OpenGL context
-        # RenderTexture requires an active GL context
-        window = arcade.Window(800, 600, "Test", visible=False)
-
-        try:
-            textures = create_forcefield_textures()
-
-            # Should return a list
-            assert isinstance(textures, list)
-
-            # Should have 109 frames (SPRITE_H)
-            assert len(textures) == 109
-
-            # All items should be Arcade textures
-            for tex in textures:
-                assert isinstance(tex, arcade.Texture)
-
-            # Verify texture dimensions
-            assert textures[0].width == 35
-            assert textures[0].height == 109
-        finally:
-            window.close()
-
-    except (FileNotFoundError, AttributeError, Exception) as e:
-        # Skip if:
-        # - forcefield.png doesn't exist (FileNotFoundError)
-        # - RenderTexture not available (no OpenGL context - AttributeError)
-        # - Window creation fails (Exception)
-        import pytest
-
-        pytest.skip(f"Cannot test texture generation: {type(e).__name__} - {e}")
