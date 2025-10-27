@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../arcade_actions"
+		}
+	],
+	"settings": {
+		"emeraldwalk.runonsave": {
+			"commands": [
+				{
+					"match": "\\.py$",
+					"cmd": "make format && make lint"
+				}
+			]
+		}
+	}
+}
