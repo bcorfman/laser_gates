@@ -41,11 +41,24 @@ class EnemyWave(ABC):
 
     def __init__(self):
         self._actions = []
+        self._scroll_actions = []  # Track horizontal scroll actions separately
 
     @property
     def actions(self) -> list[Action]:
         """Return a list of actions that are currently active for this wave."""
         return self._actions
+
+    def update_scroll_velocity(self, speed: float) -> None:
+        """Update horizontal scroll velocity for wave actions.
+
+        Updates only the scroll actions tracked in _scroll_actions.
+        Subclasses should add actions to _scroll_actions when creating them.
+
+        Args:
+            speed: New horizontal scroll velocity in pixels per frame
+        """
+        for action in self._scroll_actions:
+            action.set_current_velocity((speed, 0))
 
     @abstractmethod
     def build(self, ctx: WaveContext) -> arcade.SpriteList:
@@ -118,6 +131,7 @@ class _DensePackWave(EnemyWave):
             tag="shield_move",
         )
         self._actions.append(action)
+        self._scroll_actions.append(action)  # Track for velocity updates
 
     def add_draw_order(self) -> list[tuple[int, arcade.SpriteList]]:
         return [(5, self._shield_sprites)]
@@ -287,6 +301,7 @@ class FlashingForcefieldWave(ForcefieldWave):
         else:
             combined_actions.apply(self._last_forcefield)
         self._actions.append(combined_actions)
+        self._scroll_actions.append(move_action)  # Track scroll action for velocity updates
         if i == self._total_forcefields - 1:
             self._add_color_update_callback()
             self._add_middle_animation_actions()
@@ -340,8 +355,6 @@ class FlashingForcefieldWave(ForcefieldWave):
 
 class FlexingForcefieldWave(ForcefieldWave):
     def __init__(self, total_forcefields):
-        # TODO: Separate static forcefields from moving ones in SpriteLists
-        # TODO: Ensure Z-order for moving ones are behind static ones (and hills/tunnels)
         super().__init__(total_forcefields)
 
     def _setup_forcefield_action(self, i: int, vel: int, ctx: WaveContext):
@@ -371,6 +384,7 @@ class FlexingForcefieldWave(ForcefieldWave):
         target = self._initial_forcefields if i < self._total_forcefields - 1 else self._last_forcefield
         scroll_x.apply(target)
         self._actions.append(scroll_x)
+        self._scroll_actions.append(scroll_x)  # Track horizontal scroll action for velocity updates
 
         # Only set up Y-bounce actions once (on the last iteration)
         if i == self._total_forcefields - 1:

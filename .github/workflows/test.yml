@@ -36,12 +36,51 @@ jobs:
       - name: Install dependencies
         run: 	uv sync --no-dev --frozen
 
-      - name: Run tests
-        run: uv run pytest tests/ -v --tb=short
+      - name: Run tests (excluding OpenGL tests)
+        run: uv run pytest tests/ -v --tb=short -m "not opengl"
+
+      - name: Install Xvfb and GL libs (Linux Python 3.11 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        env:
+          DISPLAY: ':99.0'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb x11-utils libxkbcommon-x11-0 libgl1 libglu1-mesa mesa-utils
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+
+      - name: Run OpenGL tests (Linux Python 3.11 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        env:
+          DISPLAY: ':99.0'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: uv run pytest tests/ -v --tb=short -m "opengl"
+
+      - name: Smoke test game.py (Linux Python 3.11 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        env:
+          DISPLAY: ':99.0'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          echo "Running game.py for 5s"
+          set +e
+          timeout 5s uv run python game.py
+          rc=$?
+          set -e
+          if [ $rc -eq 124 ]; then
+            echo "OK: game.py ran and timed out after 5s as expected"
+          elif [ $rc -eq 0 ]; then
+            echo "OK: game.py exited cleanly within 5s"
+          else
+            echo "FAIL: game.py exited with $rc"
+            exit $rc
+          fi
 
       - name: Run tests with coverage (Linux Python 3.11 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        run: uv run pytest tests/ --cov=actions --cov-report=xml --cov-report=term-missing
+        env:
+          DISPLAY: ':99.0'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: uv run pytest tests/ --cov=src/laser_gates --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov (Linux Python 3.11 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
