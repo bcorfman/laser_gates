@@ -3,7 +3,7 @@
 import random
 
 import arcade
-from actions import Action, MoveYUntil, infinite, move_until
+from actions import Action, infinite, move_until
 
 from .config import (
     BOTTOM_BOUNDS,
@@ -116,11 +116,9 @@ class Tunnel(arcade.View):
         else:
             self._hill_bottom_action.set_current_velocity((speed, 0))
 
-        if self._wave_strategy and self._wave_strategy.actions is not None:
-            for action in self._wave_strategy.actions:
-                # Only update horizontal scroll actions, not vertical bounce actions
-                if not isinstance(action, MoveYUntil):
-                    action.set_current_velocity((speed, 0))
+        # Update wave strategy scroll velocity (wave encapsulates which actions to update)
+        if self._wave_strategy:
+            self._wave_strategy.update_scroll_velocity(speed)
 
     def on_hill_top_wrap(self, sprite, axis, side):
         sprite.position = (HILL_WIDTH * 3, sprite.position[1])
