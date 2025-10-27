@@ -16,8 +16,8 @@ dependencies = [
     "arcade-actions>=0.10.2",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]
@@ -30,8 +30,7 @@ addopts = "--cov-branch --cov-report term --cov=laser_gates"
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
 markers=["unit: Unit tests.",
-         "system: System (browser-based) tests.",
-         "opengl: Tests requiring OpenGL context (Xvfb in CI)."]
+         "system: System (browser-based) tests."]
          
 [tool.coverage.run]
 source = ["laser_gates"]
