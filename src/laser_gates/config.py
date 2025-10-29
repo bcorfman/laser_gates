@@ -1,5 +1,28 @@
 """Game configuration constants."""
 
+import os
+import sys
+from pathlib import Path
+
+
+def get_resource_path(relative_path: str) -> str:
+    """Get the absolute path to a resource file.
+    
+    Works both when running as a Python script and when compiled with Nuitka.
+    When frozen (Nuitka), resources are extracted to the same directory as the executable.
+    """
+    if getattr(sys, "frozen", False):
+        # Running as compiled executable
+        exe_dir = Path(sys.executable).parent
+        return str(exe_dir / relative_path)
+    else:
+        # Running as Python script
+        # Find the project root (parent of src/)
+        script_dir = Path(__file__).parent  # src/laser_gates
+        project_root = script_dir.parent.parent  # project root
+        return str(project_root / relative_path)
+
+
 # Window and world dimensions
 HILL_WIDTH = 512
 HILL_HEIGHT = 57
@@ -7,10 +30,15 @@ WINDOW_WIDTH = HILL_WIDTH * 2
 WINDOW_HEIGHT = 432
 
 # Resource paths
-HILL_SLICES = ["./res/hill_slice1.png", "./res/hill_slice2.png", "./res/hill_slice3.png", "./res/hill_slice4.png"]
-SHIP = "./res/dart.png"
+HILL_SLICES = [
+    get_resource_path("res/hill_slice1.png"),
+    get_resource_path("res/hill_slice2.png"),
+    get_resource_path("res/hill_slice3.png"),
+    get_resource_path("res/hill_slice4.png"),
+]
+SHIP = get_resource_path("res/dart.png")
 PLAYER_SHOT = ":resources:/images/space_shooter/laserRed01.png"
-FORCEFIELD = "./res/forcefield.png"
+FORCEFIELD = get_resource_path("res/forcefield.png")
 FORCEFIELD_SOLID_COLORS = [
     (6, 102, 17),
     (57, 23, 1),
