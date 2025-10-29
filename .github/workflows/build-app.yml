@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             platform: linux
             x86_64: ./game.bin
             asset_name: lasergates
@@ -70,7 +70,7 @@ jobs:
         shell: bash
 
       - name: Deploy with Nuitka (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-22.04'
         env:
           UV_LINK_MODE: copy
         run: |
