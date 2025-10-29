@@ -93,7 +93,7 @@ jobs:
         shell: pwsh
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}
           path: ${{ matrix.x86_64 }}
@@ -126,13 +126,13 @@ jobs:
     needs: [build, create_release]
     steps:
       - name: Download Linux artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux
           path: linux
 
       - name: Download Windows artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: windows
           path: windows
@@ -153,7 +153,7 @@ jobs:
           # map platforms -> desired asset name and label
           declare -A ASSET_NAME_MAP
           declare -A LABEL_MAP
-          ASSET_NAME_MAP[linux]="${{ matrix.asset_name || 'lasergates' }}"
+          ASSET_NAME_MAP[linux]="lasergates"
           LABEL_MAP[linux]="Linux (Ubuntu) build"
           ASSET_NAME_MAP[windows]="lasergates.exe"
           LABEL_MAP[windows]="Windows build"
