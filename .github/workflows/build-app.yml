@@ -23,20 +23,21 @@ jobs:
         include:
           - os: ubuntu-22.04
             platform: linux
-            x86_64: ./game.bin
+            x86_64: ./lasergates.bin
             asset_name: lasergates
             python-version: "3.13"
           - os: windows-latest
             platform: windows
-            x86_64: ./game.exe
+            x86_64: ./lasergates.exe
             asset_name: lasergates.exe
             python-version: "3.13"
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -61,33 +62,30 @@ jobs:
           uv pip install nuitka ordered-set
         shell: bash
 
-      - name: Deploy with Nuitka (Ubuntu)
+      - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
-        env:
-          UV_LINK_MODE: copy
-        run: |
-          uv run python3 -m nuitka \
-            --static-libpython=yes \
-            --follow-imports \
-            --include-data-dir=res=res \
-            --onefile \
-            --assume-yes-for-downloads \
-            game.py
-        shell: bash
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: game.py
+          mode: onefile
+          output-file: lasergates
+          nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
+          disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
+          include-data-dir: res=res
 
-      - name: Deploy with Nuitka (Windows)
+      - name: Build Executable with Nuitka (Windows)
         if: matrix.os == 'windows-latest'
-        env:
-          UV_LINK_MODE: copy
-        run: |
-          uv run python -m nuitka `
-            --follow-imports `
-            --include-data-dir=res=res `
-            --onefile `
-            --assume-yes-for-downloads `
-            --windows-console-mode=disable `
-            game.py
-        shell: pwsh
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: game.py
+          mode: onefile
+          output-file: lasergates
+          nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
+          disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
+          include-data-dir: res=res
+          windows-console-mode: disable
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -95,33 +93,15 @@ jobs:
           name: ${{ matrix.platform }}
           path: ${{ matrix.x86_64 }}
 
-  create_release:
-    # Create the Release once (so we can upload assets to it with labels)
+  release:
     runs-on: ubuntu-latest
     needs: build
-    outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
-          body: "Automated release for ${{ github.ref_name }} (built by GitHub Actions)"
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-  publish_release:
-    # Download artifacts created by the matrix builds and upload them to the Release with labels
-    runs-on: ubuntu-latest
-    needs: [build, create_release]
-    steps:
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
@@ -134,59 +114,34 @@ jobs:
           name: windows
           path: windows
 
-      - name: Upload artifacts to Release with labels
+      - name: Rename artifacts
+        run: |
+          mv linux/lasergates.bin lasergates
+          mv windows/lasergates.exe lasergates.exe
+
+      - name: Delete old Release (if exists)
+        continue-on-error: true
+        run: gh release delete latest -y
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
+
+      - name: Delete Git tag (if exists)
+        continue-on-error: true
         run: |
-          set -e
+          git push origin :refs/tags/latest
+          git tag -d latest
 
-          # helper to url-encode labels
-          urlenc() {
-            python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$1"
-          }
+      - name: Recreate Git tag at HEAD
+        run: |
+          git tag latest
+          git push origin latest
 
-          # map platforms -> desired asset name and label
-          declare -A ASSET_NAME_MAP
-          declare -A LABEL_MAP
-          ASSET_NAME_MAP[linux]="lasergates"
-          LABEL_MAP[linux]="Linux (Ubuntu) build"
-          ASSET_NAME_MAP[windows]="lasergates.exe"
-          LABEL_MAP[windows]="Windows build"
-
-          # For each downloaded artifact directory, find the file and upload
-          for platform in linux windows; do
-            DIR="./${platform}"
-            if [ ! -d "$DIR" ]; then
-              echo "Warning: artifact directory $DIR missing, skipping"
-              continue
-            fi
-
-            FILE=$(find "$DIR" -type f -print -quit)
-            if [ -z "$FILE" ]; then
-              echo "No file found in $DIR, skipping"
-              continue
-            fi
-
-            # Decide the final asset name shown in the Release and label
-            if [ "$platform" = "linux" ]; then
-              ASSET_NAME="lasergates"
-              LABEL="Linux (Ubuntu) build"
-            else
-              ASSET_NAME="lasergates.exe"
-              LABEL="Windows build"
-            fi
-
-            LABEL_ENC=$(urlenc "$LABEL")
-            UPLOAD_URL="https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${ASSET_NAME}&label=${LABEL_ENC}"
-
-            echo "Uploading $FILE as ${ASSET_NAME} with label '${LABEL}'..."
-            curl -sS -X POST \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary @"$FILE" \
-              "${UPLOAD_URL}"
-
-            echo "Uploaded $ASSET_NAME"
-          done
+      - name: Create release and upload artifacts
+        run: |
+          gh release create latest \
+            --title "Latest Build" \
+            --notes "Most recent multi-platform builds of Laser Gates"
+          gh release upload latest lasergates#"Linux (Ubuntu) build"
+          gh release upload latest lasergates.exe#"Windows build"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
