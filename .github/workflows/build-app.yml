@@ -57,6 +57,12 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Capture unicodedata shared library path (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        id: unicodedata_path
+        run: |
+          echo "path=$(python -c 'import unicodedata, pathlib; print(pathlib.Path(unicodedata.__file__).resolve())')" >> "$GITHUB_OUTPUT"
+
       - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         uses: Nuitka/Nuitka-Action@main
@@ -65,9 +71,11 @@ jobs:
           script-name: game.py
           mode: app
           output-file: lasergates
+          static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions
           include-module: unicodedata
+          include-data-files: ${{ steps.unicodedata_path.outputs.path }}=unicodedata.so
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
 
