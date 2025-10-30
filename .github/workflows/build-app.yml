@@ -70,6 +70,7 @@ jobs:
           script-name: game.py
           mode: onefile
           output-file: lasergates
+          static-libpython: true
           nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
@@ -149,35 +150,19 @@ jobs:
           mv linux/lasergates.bin lasergates
           mv windows/lasergates.exe lasergates.exe
 
-      - name: Delete old Release (if exists)
-        continue-on-error: true
-        run: gh release delete latest -y
+      - name: Create release (if missing) and upload artifacts to tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete Git tag (if exists)
-        continue-on-error: true
         run: |
-          # Safely attempt remote deletion; ignore error if it doesn't exist
-          git push origin :refs/tags/latest || true
-          # Delete local tag only if it exists
-          if git show-ref --tags --quiet --verify refs/tags/latest; then
-            git tag -d latest
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          echo "Target release tag: $TAG"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; will upload assets with --clobber"
           else
-            echo "Local tag 'latest' does not exist; skipping local delete"
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes "Automated build for $TAG"
           fi
-
-      - name: Recreate Git tag at HEAD
-        run: |
-          git tag latest
-          git push origin latest
-
-      - name: Create release and upload artifacts
-        run: |
-          gh release create latest \
-            --title "Latest Build" \
-            --notes "Most recent multi-platform builds of Laser Gates"
-          gh release upload latest lasergates#"Linux (Ubuntu) build"
-          gh release upload latest lasergates.exe#"Windows build"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh release upload "$TAG" lasergates --clobber#"Linux (Ubuntu) build"
+          gh release upload "$TAG" lasergates.exe --clobber#"Windows build"
