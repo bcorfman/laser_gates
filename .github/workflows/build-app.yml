@@ -61,7 +61,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         id: dynload_path
         run: |
-          echo "lib_dynload_dir=$(python -c 'import sysconfig, pathlib; print(pathlib.Path(sysconfig.get_path("platlib"), "lib-dynload").resolve())')" >> "$GITHUB_OUTPUT"
+          python -c "import os, pathlib, sysconfig, sys; path = pathlib.Path(sysconfig.get_path('stdlib')).resolve() / 'lib-dynload'; open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8').write(f'lib_dynload_dir={path}\n') if path.is_dir() else sys.exit(f'lib-dynload directory not found: {path}')"
 
       - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
