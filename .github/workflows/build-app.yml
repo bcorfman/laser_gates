@@ -164,5 +164,5 @@ jobs:
               --title "$TAG" \
               --notes "Automated build for $TAG"
           fi
-          gh release upload "$TAG" lasergates --clobber#"Linux (Ubuntu) build"
-          gh release upload "$TAG" lasergates.exe --clobber#"Windows build"
+          gh release upload "$TAG" lasergates --clobber #"Linux (Ubuntu) build"
+          gh release upload "$TAG" lasergates.exe --clobber #"Windows build"
