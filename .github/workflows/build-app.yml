@@ -158,8 +158,14 @@ jobs:
       - name: Delete Git tag (if exists)
         continue-on-error: true
         run: |
-          git push origin :refs/tags/latest
-          git tag -d latest
+          # Safely attempt remote deletion; ignore error if it doesn't exist
+          git push origin :refs/tags/latest || true
+          # Delete local tag only if it exists
+          if git show-ref --tags --quiet --verify refs/tags/latest; then
+            git tag -d latest
+          else
+            echo "Local tag 'latest' does not exist; skipping local delete"
+          fi
 
       - name: Recreate Git tag at HEAD
         run: |
