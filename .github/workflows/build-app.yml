@@ -23,13 +23,9 @@ jobs:
         include:
           - os: ubuntu-22.04
             platform: linux
-            x86_64: ./lasergates.bin
-            asset_name: lasergates
             python-version: "3.11"
           - os: windows-latest
             platform: windows
-            x86_64: ./lasergates.exe
-            asset_name: lasergates.exe
             python-version: "3.11"
 
     steps:
@@ -69,7 +65,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.py
-          mode: app
+          mode: standalone
           output-file: lasergates
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
@@ -85,7 +81,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.py
-          mode: app
+          mode: standalone
           output-file: lasergates
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
@@ -94,41 +90,44 @@ jobs:
           include-module: unicodedata
           windows-console-mode: force
 
-      - name: Locate built executable (Linux)
+      - name: Zip Build Output (Linux)
         if: matrix.os == 'ubuntu-22.04'
         run: |
           set -euo pipefail
-          echo "Searching for built Linux binary..."
+          echo "Searching for built Linux binary directory..."
           # List to help debugging when paths change
           ls -laR . | head -n 500 || true
-          BIN=$(find . -maxdepth 4 -type f -name 'lasergates*' -perm -u+x | head -n1 || true)
-          if [ -z "${BIN}" ]; then
-            echo "ERROR: No Linux binary found after build"
+          BIN_DIR=$(find . -type d -name 'lasergates.dist' | head -n1 || true)
+          if [ -z "${BIN_DIR}" ]; then
+            echo "ERROR: No Linux dist directory found after build"
             exit 1
           fi
-          echo "Found: ${BIN}"
-          mv "${BIN}" ./lasergates.bin
+          echo "Found: ${BIN_DIR}"
+          mkdir -p zip_output
+          cd "${BIN_DIR}"
+          zip -r "../../zip_output/lasergates-ubuntu.zip" .
+          cd -
         shell: bash
 
-      - name: Locate built executable (Windows)
+      - name: Zip Build Output (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          Write-Host "Searching for built Windows binary..."
-          Get-ChildItem -Recurse -File -Filter 'lasergates*.exe' | Select-Object -First 1 | ForEach-Object {
-            Write-Host ("Found: " + $_.FullName)
-            Move-Item $_.FullName -Destination ./lasergates.exe -Force
-          }
-          if (!(Test-Path ./lasergates.exe)) {
-            Write-Error "ERROR: No Windows binary found after build"
+          Write-Host "Searching for built Windows binary directory..."
+          $DistDir = Get-ChildItem -Recurse -Directory -Filter 'lasergates.dist' | Select-Object -First 1
+          if ($null -eq $DistDir) {
+            Write-Error "ERROR: No Windows dist directory found after build"
             exit 1
           }
+          Write-Host ("Found: " + $DistDir.FullName)
+          New-Item -ItemType Directory -Force -Path zip_output | Out-Null
+          Compress-Archive -Path "$($DistDir.FullName)\*" -DestinationPath "zip_output\lasergates-windows.zip" -Force
         shell: pwsh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}
-          path: ${{ matrix.x86_64 }}
+          path: zip_output/lasergates-${{ matrix.platform }}.zip
 
   release:
     runs-on: ubuntu-latest
@@ -139,22 +138,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Linux artifact
+      - name: Download All Build Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: linux
-          path: linux
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: windows
-          path: windows
-
-      - name: Rename artifacts
-        run: |
-          mv linux/lasergates.bin lasergates
-          mv windows/lasergates.exe lasergates.exe
+          path: downloads
 
       - name: Create release (if missing) and upload artifacts to tag
         env:
@@ -170,5 +157,4 @@ jobs:
               --title "$TAG" \
               --notes "Automated build for $TAG"
           fi
-          gh release upload "$TAG" lasergates --clobber #"Linux (Ubuntu) build"
-          gh release upload "$TAG" lasergates.exe --clobber #"Windows build"
+          gh release upload "$TAG" downloads/**/*.zip --clobber
