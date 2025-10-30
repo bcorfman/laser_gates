@@ -70,7 +70,7 @@ jobs:
           script-name: game.py
           mode: onefile
           output-file: lasergates
-          static-libpython: true
+          static-libpython: "yes"
           nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
