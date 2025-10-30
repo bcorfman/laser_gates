@@ -1,20 +1,31 @@
 """Game configuration constants."""
 
-import os
 import sys
 from pathlib import Path
 
 
 def get_resource_path(relative_path: str) -> str:
     """Get the absolute path to a resource file.
-    
+
     Works both when running as a Python script and when compiled with Nuitka.
-    When frozen (Nuitka), resources are extracted to the same directory as the executable.
+    When frozen (Nuitka), resources are extracted to the temporary directory.
     """
     if getattr(sys, "frozen", False):
-        # Running as compiled executable
-        exe_dir = Path(sys.executable).parent
-        return str(exe_dir / relative_path)
+        # Running as compiled executable (Nuitka or PyInstaller)
+        # sys._MEIPASS is set by both PyInstaller and Nuitka to the temp extraction directory
+        base_path = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+
+        # Debug logging
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Frozen build - sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
+        logger.debug(f"Frozen build - sys.executable: {sys.executable}")
+        logger.debug(f"Frozen build - base_path: {base_path}")
+
+        full_path = base_path / relative_path
+        logger.debug(f"Looking for resource at: {full_path}")
+        return str(full_path)
     else:
         # Running as Python script
         # Find the project root (parent of src/)
