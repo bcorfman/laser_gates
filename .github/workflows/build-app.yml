@@ -87,6 +87,36 @@ jobs:
           include-data-dir: res=res
           windows-console-mode: disable
 
+      - name: Locate built executable (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          set -euo pipefail
+          echo "Searching for built Linux binary..."
+          # List to help debugging when paths change
+          ls -laR . | head -n 500 || true
+          BIN=$(find . -maxdepth 4 -type f -name 'lasergates*' -perm -u+x | head -n1 || true)
+          if [ -z "${BIN}" ]; then
+            echo "ERROR: No Linux binary found after build"
+            exit 1
+          fi
+          echo "Found: ${BIN}"
+          mv "${BIN}" ./lasergates.bin
+        shell: bash
+
+      - name: Locate built executable (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          Write-Host "Searching for built Windows binary..."
+          Get-ChildItem -Recurse -File -Filter 'lasergates*.exe' | Select-Object -First 1 | ForEach-Object {
+            Write-Host ("Found: " + $_.FullName)
+            Move-Item $_.FullName -Destination ./lasergates.exe -Force
+          }
+          if (!(Test-Path ./lasergates.exe)) {
+            Write-Error "ERROR: No Windows binary found after build"
+            exit 1
+          }
+        shell: pwsh
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
