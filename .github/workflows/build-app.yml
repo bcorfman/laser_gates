@@ -73,7 +73,7 @@ jobs:
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
-          include-package: actions
+          include-package: arcade-actions
           include-data-dir: res=res
 
       - name: Build Executable with Nuitka (Windows)
@@ -86,9 +86,9 @@ jobs:
           output-file: lasergates
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
-          include-package: actions
+          include-package: arcade-actions
           include-data-dir: res=res
-          windows-console-mode: disable
+          windows-console-mode: enable
 
       - name: Locate built executable (Linux)
         if: matrix.os == 'ubuntu-22.04'
