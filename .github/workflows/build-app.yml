@@ -40,6 +40,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
 
       - uses: seanmiddleditch/gha-setup-vsdevenv@master
         if: matrix.os == 'windows-latest'
@@ -50,17 +53,9 @@ jobs:
         run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
         shell: bash
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "latest"
-
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          uv python pin ${{ matrix.python-version }}
-          uv sync --no-dev --frozen
-          uv pip install nuitka ordered-set
-        shell: bash
+          pip install -r requirements.txt
 
       - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
