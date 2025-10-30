@@ -65,7 +65,6 @@ jobs:
           script-name: game.py
           mode: app
           output-file: lasergates
-          static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions
           include-module: unicodedata
