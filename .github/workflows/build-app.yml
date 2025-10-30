@@ -57,11 +57,11 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Capture unicodedata shared library path (Linux)
+      - name: Capture lib-dynload directory path (Linux)
         if: matrix.os == 'ubuntu-22.04'
-        id: unicodedata_path
+        id: dynload_path
         run: |
-          echo "path=$(python -c 'import unicodedata, pathlib; print(pathlib.Path(unicodedata.__file__).resolve())')" >> "$GITHUB_OUTPUT"
+          echo "lib_dynload_dir=$(python -c 'import sysconfig, pathlib; print(pathlib.Path(sysconfig.get_path("platlib"), "lib-dynload").resolve())')" >> "$GITHUB_OUTPUT"
 
       - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
@@ -74,9 +74,10 @@ jobs:
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions
-          include-data-files: ${{ steps.unicodedata_path.outputs.path }}=unicodedata.so
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
-          include-data-dir: res=res
+          include-data-dir: |
+            res=res
+            ${{ steps.dynload_path.outputs.lib_dynload_dir }}=lib-dynload
 
       - name: Build Executable with Nuitka (Windows)
         if: matrix.os == 'windows-latest'
