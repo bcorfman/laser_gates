@@ -25,12 +25,12 @@ jobs:
             platform: linux
             x86_64: ./lasergates.bin
             asset_name: lasergates
-            python-version: "3.13"
+            python-version: "3.11"
           - os: windows-latest
             platform: windows
             x86_64: ./lasergates.exe
             asset_name: lasergates.exe
-            python-version: "3.13"
+            python-version: "3.11"
 
     steps:
       - name: Check out repository
@@ -68,7 +68,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.py
-          mode: onefile
+          mode: app
           output-file: lasergates
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
@@ -81,7 +81,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.py
-          mode: onefile
+          mode: app
           output-file: lasergates
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
