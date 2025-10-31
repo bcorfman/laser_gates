@@ -48,33 +48,34 @@ def get_resource_path(relative_path: str) -> str:
         logger.info(f"Resolved resource path: {resolved_path}")
         return str(resolved_path)
 
-    # Check if we're running from a Nuitka executable (even if sys.frozen is False)
-    # Nuitka sometimes doesn't set sys.frozen, but we can detect it by checking if
-    # __file__ points to a module in a dist directory structure, or if sys.executable
-    # doesn't look like a regular Python interpreter
-    try:
-        print(f"__file__: {__file__}")
-        print(f"sys.executable: {sys.executable}")
-        print(f"sys.frozen: {getattr(sys, 'frozen', 'Not set')}")
-        print(f"sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
-        print(f"sys.argv: {sys.argv}")
-        print(f"sys.path: {sys.path}")
-        print(f"sys.modules: {sys.modules}")
-        print(f"sys.stdin: {sys.stdin}")
-        print(f"sys.stdout: {sys.stdout}")
-        print(f"sys.stderr: {sys.stderr}")
+        # Check if we're running from a Nuitka executable (even if sys.frozen is False)
+        # Nuitka sometimes doesn't set sys.frozen, but we can detect it by checking if
+        # __file__ points to a module in a dist directory structure, or if sys.executable
+        # doesn't look like a regular Python interpreter
+
         file_path = Path(__file__)
         # Check if __file__ looks like it's in a Nuitka dist structure
         # Typically: contains .dist or similar build artifacts
         file_str = str(file_path)
         exe_name = Path(sys.executable).name
+        argv0_name = Path(sys.argv[0]).name if sys.argv else ""
 
-        # Detected if __file__ contains .dist/build OR sys.executable is not a standard Python interpreter
+        # Detected if __file__ contains .dist/build OR we're running a compiled binary
         # Standard interpreters: python, python3, python.exe, python3.exe, python3.x, etc.
+        # Also allow -c, script names, etc. for development
         is_nuitka_build = any(indicator in file_str.lower() for indicator in [".dist", "build"])
-        # Check if executable name looks like a standard Python interpreter
-        is_standard_python = exe_name.startswith("python")
-        is_non_standard_exe = not is_standard_python
+        is_standard_python_exe = exe_name.startswith("python")
+        # argv0 is a compiled binary if it doesn't start with python and isn't a script indicator
+        # Exclude common test runners and development tools
+        excluded_names = {"pytest", "unittest", "nose", "coverage", "pytest-cov"}
+        is_argv0_compiled = (
+            argv0_name
+            and not argv0_name.startswith("python")
+            and not argv0_name.startswith("-")
+            and not argv0_name.endswith(".py")
+            and argv0_name not in excluded_names
+        )
+        is_non_standard_exe = not is_standard_python_exe or is_argv0_compiled
 
         if is_nuitka_build or is_non_standard_exe:
             # Likely a Nuitka build where sys.frozen wasn't set
@@ -82,15 +83,13 @@ def get_resource_path(relative_path: str) -> str:
             exe_dir = Path(sys.executable).resolve().parent
             full_path = exe_dir / relative_path
             logger.info(
-                f"Nuitka build detected - is_nuitka_build: {is_nuitka_build}, is_non_standard_exe: {is_non_standard_exe}, exe_name: {exe_name}"
+                f"Nuitka build detected - is_nuitka_build: {is_nuitka_build}, is_non_standard_exe: {is_non_standard_exe}, exe_name: {exe_name}, argv0_name: {argv0_name}"
             )
             logger.info(f"Using exe_dir: {exe_dir}")
             logger.info(f"Looking for resource at: {full_path}")
             resolved_path = full_path.resolve(strict=False)
             logger.info(f"Resolved resource path: {resolved_path}")
             return str(resolved_path)
-    except Exception:
-        pass
 
     # Running as Python script
     # Find the project root (parent of src/)
