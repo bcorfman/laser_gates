@@ -28,9 +28,12 @@ def get_resource_path(relative_path: str) -> str:
         return str(resolved_path)
 
     # Check if we're in a deployed Nuitka environment
-    # In deployed builds, __file__ contains "laser_gates/laser_gates" pattern
+    # In deployed builds, __file__ contains "laser_gates/laser_gates" and argv[0] is not a python interpreter
     file_str = str(Path(__file__))
-    if "laser_gates/laser_gates" in file_str:
+    argv0_name = Path(sys.argv[0]).name if sys.argv else ""
+    is_argv0_not_python = argv0_name and not argv0_name.startswith("python")
+
+    if "laser_gates/laser_gates" in file_str and is_argv0_not_python:
         # Deployed environment - use executable directory
         exe_dir = Path(sys.executable).resolve().parent
         return str(exe_dir / relative_path)
