@@ -13,7 +13,15 @@ def get_resource_path(relative_path: str) -> str:
     if getattr(sys, "frozen", False):
         # Running as compiled executable (Nuitka or PyInstaller)
         # sys._MEIPASS is set by both PyInstaller and Nuitka to the temp extraction directory
-        base_path = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            base_path = Path(meipass)
+            exe_path = None
+        else:
+            # For Nuitka standalone, resources are in the same directory as the executable
+            # Resolve sys.executable to handle symlinks, then get parent
+            exe_path = Path(sys.executable).resolve()
+            base_path = exe_path.parent
 
         # Debug logging
         import logging
@@ -21,11 +29,17 @@ def get_resource_path(relative_path: str) -> str:
         logger = logging.getLogger(__name__)
         logger.info(f"Frozen build - sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
         logger.info(f"Frozen build - sys.executable: {sys.executable}")
+        if exe_path:
+            logger.info(f"Frozen build - exe_path (resolved): {exe_path}")
         logger.info(f"Frozen build - base_path: {base_path}")
 
         full_path = base_path / relative_path
         logger.info(f"Looking for resource at: {full_path}")
-        return str(full_path)
+        # Resolve the path here to avoid arcade having to resolve it later
+        # This handles symlinks and ensures the path is absolute
+        resolved_path = full_path.resolve(strict=False)
+        logger.info(f"Resolved resource path: {resolved_path}")
+        return str(resolved_path)
     else:
         # Running as Python script
         # Find the project root (parent of src/)
