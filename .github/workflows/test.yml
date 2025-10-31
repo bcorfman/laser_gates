@@ -54,15 +54,15 @@ jobs:
           DISPLAY: ':99.0'
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          echo "Running game.py for 5s"
+          echo "Running game.py for 10s"
           set +e
-          timeout 5s uv run python game.py
+          timeout 10s uv run python game.py
           rc=$?
           set -e
           if [ $rc -eq 124 ]; then
-            echo "OK: game.py ran and timed out after 5s as expected"
+            echo "OK: game.py ran and timed out after 10s as expected"
           elif [ $rc -eq 0 ]; then
-            echo "OK: game.py exited cleanly within 5s"
+            echo "OK: game.py exited cleanly within 10s"
           else
             echo "FAIL: game.py exited with $rc"
             exit $rc
