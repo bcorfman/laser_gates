@@ -10,6 +10,15 @@ def get_resource_path(relative_path: str) -> str:
     Works both when running as a Python script and when compiled with Nuitka.
     When frozen (Nuitka), resources are extracted to the temporary directory.
     """
+    # Debug logging at start
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"get_resource_path called with: {relative_path}")
+    logger.info(f"sys.frozen: {getattr(sys, 'frozen', 'Not set')}")
+    logger.info(f"__file__: {__file__}")
+    logger.info(f"sys.executable: {sys.executable}")
+
     # Check if we're in a frozen environment (PyInstaller, Nuitka, etc.)
     if getattr(sys, "frozen", False):
         # Running as compiled executable (Nuitka or PyInstaller)
@@ -25,9 +34,6 @@ def get_resource_path(relative_path: str) -> str:
             base_path = exe_path.parent
 
         # Debug logging
-        import logging
-
-        logger = logging.getLogger(__name__)
         logger.info(f"Frozen build - sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
         logger.info(f"Frozen build - sys.executable: {sys.executable}")
         if exe_path:
@@ -44,21 +50,30 @@ def get_resource_path(relative_path: str) -> str:
 
     # Check if we're running from a Nuitka executable (even if sys.frozen is False)
     # Nuitka sometimes doesn't set sys.frozen, but we can detect it by checking if
-    # __file__ points to a module in a dist directory structure
+    # __file__ points to a module in a dist directory structure, or if sys.executable
+    # doesn't look like a regular Python interpreter
     try:
         file_path = Path(__file__)
         # Check if __file__ looks like it's in a Nuitka dist structure
         # Typically: contains .dist or similar build artifacts
         file_str = str(file_path)
-        if any(indicator in file_str.lower() for indicator in [".dist", "build"]):
+        exe_name = Path(sys.executable).name
+
+        # Detected if __file__ contains .dist/build OR sys.executable is not a standard Python interpreter
+        # Standard interpreters: python, python3, python.exe, python3.exe, python3.x, etc.
+        is_nuitka_build = any(indicator in file_str.lower() for indicator in [".dist", "build"])
+        # Check if executable name looks like a standard Python interpreter
+        is_standard_python = exe_name.startswith("python")
+        is_non_standard_exe = not is_standard_python
+
+        if is_nuitka_build or is_non_standard_exe:
             # Likely a Nuitka build where sys.frozen wasn't set
             # Use sys.executable to find the directory
             exe_dir = Path(sys.executable).resolve().parent
             full_path = exe_dir / relative_path
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.info(f"Nuitka build detected via __file__: {__file__}")
+            logger.info(
+                f"Nuitka build detected - is_nuitka_build: {is_nuitka_build}, is_non_standard_exe: {is_non_standard_exe}, exe_name: {exe_name}"
+            )
             logger.info(f"Using exe_dir: {exe_dir}")
             logger.info(f"Looking for resource at: {full_path}")
             resolved_path = full_path.resolve(strict=False)
@@ -71,7 +86,15 @@ def get_resource_path(relative_path: str) -> str:
     # Find the project root (parent of src/)
     script_dir = Path(__file__).parent  # src/laser_gates
     project_root = script_dir.parent.parent  # project root
-    return str(project_root / relative_path)
+
+    # Debug logging for development mode
+    logger.info(f"Development mode - __file__: {__file__}")
+    logger.info(f"Development mode - script_dir: {script_dir}")
+    logger.info(f"Development mode - project_root: {project_root}")
+
+    result_path = str(project_root / relative_path)
+    logger.info(f"Development mode - final path: {result_path}")
+    return result_path
 
 
 # Window and world dimensions
