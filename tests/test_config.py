@@ -79,6 +79,26 @@ class TestGetResourcePath:
             normalized_result = result.replace(os.sep, "/").replace("\\", "/")
             assert "/home/user/myapp/res/dart.png" in normalized_result
 
+    def test_deployed_nuitka_environment_simulation(self):
+        """Test the exact deployment conditions reported by the user."""
+        # Simulate the exact conditions from the deployed environment
+        deployed_file = "/home/bcorfman/laser_gates/laser_gates/config.py"
+        deployed_executable = "/home/bcorfman/laser_gates/python"
+        deployed_argv = ["/home/bcorfman/laser_gates/lasergates"]
+
+        with (
+            patch("sys.frozen", False, create=True),
+            patch("laser_gates.config.__file__", deployed_file),
+            patch("sys.executable", deployed_executable),
+            patch("sys.argv", deployed_argv),
+        ):
+            # This should detect the deployed environment and use the executable directory
+            result = config.get_resource_path("res/dart.png")
+
+            # Should use /home/bcorfman/laser_gates as base (executable parent)
+            expected = "/home/bcorfman/laser_gates/res/dart.png"
+            assert result == expected, f"Expected {expected}, got {result}"
+
     def test_nuitka_with_dist_detection(self):
         """Test detecting Nuitka build via .dist in __file__."""
         # Skip this test as it requires module reloading which is complex
