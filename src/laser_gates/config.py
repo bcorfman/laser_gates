@@ -28,17 +28,19 @@ def get_resource_path(relative_path: str) -> str:
         return str(resolved_path)
 
     # Check if we're in a deployed Nuitka environment
-    # In deployed builds, __file__ contains "laser_gates/laser_gates" and the executable
-    # is in the same directory (not in a standard Python installation path)
-    file_str = str(Path(__file__))
+    # In deployed builds, __file__ contains "laser_gates/laser_gates" (or laser_gates\laser_gates on Windows)
+    # and the executable is in the same directory (not in a standard Python installation path)
+    file_path = Path(__file__).resolve()
     exe_path = Path(sys.executable).resolve()
     exe_parent = exe_path.parent
 
-    # Check if __file__ and sys.executable are in the same parent directory
+    # Check if __file__ contains the laser_gates/laser_gates pattern (normalize for cross-platform)
+    # and if sys.executable and __file__ are in the same parent directory
     # This indicates a Nuitka standalone build where everything is bundled together
-    file_parent = Path(__file__).resolve().parent.parent  # Go up to the dist directory
+    file_parent = file_path.parent.parent  # Go up to the dist directory
+    has_nested_laser_gates = file_path.parts[-3:-1] == ("laser_gates", "laser_gates")
 
-    if "laser_gates/laser_gates" in file_str and exe_parent == file_parent:
+    if has_nested_laser_gates and exe_parent == file_parent:
         # Deployed environment - use executable directory
         return str(exe_parent / relative_path)
 

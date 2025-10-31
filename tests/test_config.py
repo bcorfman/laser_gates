@@ -101,9 +101,11 @@ class TestGetResourcePath:
 
                 # Should use /home/bcorfman/laser_gates as base (executable parent)
                 # Note: Path.resolve() may add system-specific prefixes (e.g., /System/Volumes/Data on macOS)
-                # so we check that the result ends with the expected path structure
-                assert result.endswith("bcorfman/laser_gates/res/dart.png"), \
-                    f"Expected path ending with 'bcorfman/laser_gates/res/dart.png', got {result}"
+                # Normalize path separators for cross-platform comparison
+                normalized_result = result.replace(os.sep, "/")
+                assert normalized_result.endswith(
+                    "bcorfman/laser_gates/res/dart.png"
+                ), f"Expected path ending with 'bcorfman/laser_gates/res/dart.png', got {result}"
                 # Also verify it's an absolute path
                 assert Path(result).is_absolute(), f"Expected absolute path, got {result}"
             finally:
