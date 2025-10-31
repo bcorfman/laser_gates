@@ -43,8 +43,6 @@ jobs:
       - uses: seanmiddleditch/gha-setup-vsdevenv@master
         if: matrix.os == 'windows-latest'
 
-      - uses: Chocobo1/setup-ccache-action@v1
-
       - name: Set env repo name
         run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
         shell: bash
@@ -57,7 +55,18 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         id: dynload_path
         run: |
-          python -c "import os, pathlib, sysconfig, sys; path = pathlib.Path(sysconfig.get_path('stdlib')).resolve() / 'lib-dynload'; open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8').write(f'lib_dynload_dir={path}\n') if path.is_dir() else sys.exit(f'lib-dynload directory not found: {path}')"
+          set -euo pipefail
+          LIB_DYNLOAD_DIR=$(python -c "import pathlib, sysconfig; path = pathlib.Path(sysconfig.get_path('stdlib')).resolve() / 'lib-dynload'; print(path)")
+          if [ ! -d "${LIB_DYNLOAD_DIR}" ]; then
+            echo "lib-dynload directory not found: ${LIB_DYNLOAD_DIR}" >&2
+            exit 1
+          fi
+          if find "${LIB_DYNLOAD_DIR}" -type f -print -quit >/dev/null; then
+            echo "lib_dynload_mapping=${LIB_DYNLOAD_DIR}=." >> "${GITHUB_OUTPUT}"
+          else
+            echo "lib_dynload_mapping=" >> "${GITHUB_OUTPUT}"
+            echo "lib-dynload directory is present but contains no files; skipping include." >&2
+          fi
 
       - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
@@ -75,7 +84,7 @@ jobs:
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: |
             res=res
-            ${{ steps.dynload_path.outputs.lib_dynload_dir }}=.
+            ${{ steps.dynload_path.outputs.lib_dynload_mapping }}
 
       - name: Build Executable with Nuitka (Windows)
         if: matrix.os == 'windows-latest'
