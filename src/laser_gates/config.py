@@ -19,12 +19,12 @@ def get_resource_path(relative_path: str) -> str:
         import logging
 
         logger = logging.getLogger(__name__)
-        logger.debug(f"Frozen build - sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
-        logger.debug(f"Frozen build - sys.executable: {sys.executable}")
-        logger.debug(f"Frozen build - base_path: {base_path}")
+        logger.info(f"Frozen build - sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
+        logger.info(f"Frozen build - sys.executable: {sys.executable}")
+        logger.info(f"Frozen build - base_path: {base_path}")
 
         full_path = base_path / relative_path
-        logger.debug(f"Looking for resource at: {full_path}")
+        logger.info(f"Looking for resource at: {full_path}")
         return str(full_path)
     else:
         # Running as Python script
