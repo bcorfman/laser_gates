@@ -69,7 +69,8 @@ jobs:
           output-file: lasergates
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
-          include-package: actions
+          include-package: actions,laser_gates
+          include-package-data: laser_gates
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: |
             res=res
