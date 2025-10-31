@@ -33,7 +33,7 @@ def get_resource_path(relative_path: str) -> str:
             logger.info(f"Frozen build - exe_path (resolved): {exe_path}")
         logger.info(f"Frozen build - base_path: {base_path}")
 
-        full_path = base_path / relative_path
+        full_path = exe_path / relative_path
         logger.info(f"Looking for resource at: {full_path}")
         # Resolve the path here to avoid arcade having to resolve it later
         # This handles symlinks and ensures the path is absolute
