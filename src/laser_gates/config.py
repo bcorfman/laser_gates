@@ -53,6 +53,16 @@ def get_resource_path(relative_path: str) -> str:
     # __file__ points to a module in a dist directory structure, or if sys.executable
     # doesn't look like a regular Python interpreter
     try:
+        print(f"__file__: {__file__}")
+        print(f"sys.executable: {sys.executable}")
+        print(f"sys.frozen: {getattr(sys, 'frozen', 'Not set')}")
+        print(f"sys._MEIPASS: {getattr(sys, '_MEIPASS', 'Not set')}")
+        print(f"sys.argv: {sys.argv}")
+        print(f"sys.path: {sys.path}")
+        print(f"sys.modules: {sys.modules}")
+        print(f"sys.stdin: {sys.stdin}")
+        print(f"sys.stdout: {sys.stdout}")
+        print(f"sys.stderr: {sys.stderr}")
         file_path = Path(__file__)
         # Check if __file__ looks like it's in a Nuitka dist structure
         # Typically: contains .dist or similar build artifacts
