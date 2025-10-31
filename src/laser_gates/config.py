@@ -44,7 +44,7 @@ def get_resource_path(relative_path: str) -> str:
         # Running as Python script
         # Find the project root (parent of src/)
         script_dir = Path(__file__).parent  # src/laser_gates
-        project_root = script_dir.parent.parent  # project root
+        project_root = script_dir.parent  # project root
         return str(project_root / relative_path)
 
 
