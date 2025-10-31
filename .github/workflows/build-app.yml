@@ -95,8 +95,10 @@ jobs:
         run: |
           set -euo pipefail
           echo "Searching for built Linux binary directory..."
-          # List to help debugging when paths change
-          { ls -laR . | head -n 500; true; }
+          # List to help debugging when paths change (disable pipefail temporarily)
+          set +o pipefail
+          ls -laR . | head -n 500 || true
+          set -o pipefail
           BIN_DIR=$(find . -type d -name 'game.dist' | head -n1)
           if [ -z "${BIN_DIR}" ]; then
             echo "ERROR: No Linux dist directory found after build"
