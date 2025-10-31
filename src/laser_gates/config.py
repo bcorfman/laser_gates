@@ -10,6 +10,7 @@ def get_resource_path(relative_path: str) -> str:
     Works both when running as a Python script and when compiled with Nuitka.
     When frozen (Nuitka), resources are extracted to the temporary directory.
     """
+    # Check if we're in a frozen environment (PyInstaller, Nuitka, etc.)
     if getattr(sys, "frozen", False):
         # Running as compiled executable (Nuitka or PyInstaller)
         # sys._MEIPASS is set by both PyInstaller and Nuitka to the temp extraction directory
@@ -40,12 +41,37 @@ def get_resource_path(relative_path: str) -> str:
         resolved_path = full_path.resolve(strict=False)
         logger.info(f"Resolved resource path: {resolved_path}")
         return str(resolved_path)
-    else:
-        # Running as Python script
-        # Find the project root (parent of src/)
-        script_dir = Path(__file__).parent  # src/laser_gates
-        project_root = script_dir.parent.parent  # project root
-        return str(project_root / relative_path)
+
+    # Check if we're running from a Nuitka executable (even if sys.frozen is False)
+    # Nuitka sometimes doesn't set sys.frozen, but we can detect it by checking if
+    # __file__ points to a module in a dist directory structure
+    try:
+        file_path = Path(__file__)
+        # Check if __file__ looks like it's in a Nuitka dist structure
+        # Typically: contains .dist or similar build artifacts
+        file_str = str(file_path)
+        if any(indicator in file_str.lower() for indicator in [".dist", "build"]):
+            # Likely a Nuitka build where sys.frozen wasn't set
+            # Use sys.executable to find the directory
+            exe_dir = Path(sys.executable).resolve().parent
+            full_path = exe_dir / relative_path
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.info(f"Nuitka build detected via __file__: {__file__}")
+            logger.info(f"Using exe_dir: {exe_dir}")
+            logger.info(f"Looking for resource at: {full_path}")
+            resolved_path = full_path.resolve(strict=False)
+            logger.info(f"Resolved resource path: {resolved_path}")
+            return str(resolved_path)
+    except Exception:
+        pass
+
+    # Running as Python script
+    # Find the project root (parent of src/)
+    script_dir = Path(__file__).parent  # src/laser_gates
+    project_root = script_dir.parent.parent  # project root
+    return str(project_root / relative_path)
 
 
 # Window and world dimensions
