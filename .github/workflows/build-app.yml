@@ -53,8 +53,20 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Set PYTHONPATH
+      - name: Set PYTHONPATH (Linux)
+        if: matrix.os == 'ubuntu-22.04'
         run: echo "PYTHONPATH=${{ github.workspace }}/src:$PYTHONPATH" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Set PYTHONPATH (Windows)
+        if: matrix.os == 'windows-latest'
+        run: echo "PYTHONPATH=${{ github.workspace }}\src;$env:PYTHONPATH" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Verify PYTHONPATH
+        run: |
+          echo "PYTHONPATH is: $PYTHONPATH"
+          python -c "import sys; print('Python path:', sys.path)"
         shell: bash
 
       - name: Capture lib-dynload directory path (Linux)
@@ -74,9 +86,11 @@ jobs:
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions,laser_gates
+          python-flag: -P src
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: |
             res=res
+            ${{ steps.dynload_path.outputs.lib_dynload_dir }}=.
 
       - name: Build Executable with Nuitka (Windows)
         if: matrix.os == 'windows-latest'
@@ -88,6 +102,7 @@ jobs:
           output-file: lasergates
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions,laser_gates
+          python-flag: -P src
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
           include-module: unicodedata
