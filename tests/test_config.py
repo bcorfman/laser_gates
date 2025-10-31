@@ -82,22 +82,28 @@ class TestGetResourcePath:
     def test_deployed_nuitka_environment_simulation(self):
         """Test the exact deployment conditions reported by the user."""
         # Simulate the exact conditions from the deployed environment
+        # In Nuitka standalone: executable and modules are in the same directory
         deployed_file = "/home/bcorfman/laser_gates/laser_gates/config.py"
         deployed_executable = "/home/bcorfman/laser_gates/python"
-        deployed_argv = ["/home/bcorfman/laser_gates/lasergates"]
 
         with (
             patch("sys.frozen", False, create=True),
-            patch("laser_gates.config.__file__", deployed_file),
             patch("sys.executable", deployed_executable),
-            patch("sys.argv", deployed_argv),
         ):
-            # This should detect the deployed environment and use the executable directory
-            result = config.get_resource_path("res/dart.png")
+            # Temporarily patch __file__ in the function's context
+            import laser_gates.config as cfg
 
-            # Should use /home/bcorfman/laser_gates as base (executable parent)
-            expected = "/home/bcorfman/laser_gates/res/dart.png"
-            assert result == expected, f"Expected {expected}, got {result}"
+            original_file = cfg.__file__
+            try:
+                cfg.__file__ = deployed_file
+                # This should detect the deployed environment and use the executable directory
+                result = cfg.get_resource_path("res/dart.png")
+
+                # Should use /home/bcorfman/laser_gates as base (executable parent)
+                expected = "/home/bcorfman/laser_gates/res/dart.png"
+                assert result == expected, f"Expected {expected}, got {result}"
+            finally:
+                cfg.__file__ = original_file
 
     def test_nuitka_with_dist_detection(self):
         """Test detecting Nuitka build via .dist in __file__."""

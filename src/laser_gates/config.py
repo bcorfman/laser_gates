@@ -28,15 +28,19 @@ def get_resource_path(relative_path: str) -> str:
         return str(resolved_path)
 
     # Check if we're in a deployed Nuitka environment
-    # In deployed builds, __file__ contains "laser_gates/laser_gates" and argv[0] is not a python interpreter
+    # In deployed builds, __file__ contains "laser_gates/laser_gates" and the executable
+    # is in the same directory (not in a standard Python installation path)
     file_str = str(Path(__file__))
-    argv0_name = Path(sys.argv[0]).name if sys.argv else ""
-    is_argv0_not_python = argv0_name and not argv0_name.startswith("python")
+    exe_path = Path(sys.executable).resolve()
+    exe_parent = exe_path.parent
 
-    if "laser_gates/laser_gates" in file_str and is_argv0_not_python:
+    # Check if __file__ and sys.executable are in the same parent directory
+    # This indicates a Nuitka standalone build where everything is bundled together
+    file_parent = Path(__file__).resolve().parent.parent  # Go up to the dist directory
+
+    if "laser_gates/laser_gates" in file_str and exe_parent == file_parent:
         # Deployed environment - use executable directory
-        exe_dir = Path(sys.executable).resolve().parent
-        return str(exe_dir / relative_path)
+        return str(exe_parent / relative_path)
 
     # Running as Python script
     # Find the project root (parent of src/)
