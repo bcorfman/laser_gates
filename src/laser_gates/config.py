@@ -28,8 +28,6 @@ def get_resource_path(relative_path: str) -> str:
 
         # Get the directory containing this module file
         module_dir = Path(__file__).parent  # .../laser_gates/
-        # Go up to src/ level
-        src_dir = module_dir.parent  # .../src/ or just .../ depending on structure
 
         # In Nuitka onefile, the structure is typically:
         # temp_dir/
@@ -46,13 +44,40 @@ def get_resource_path(relative_path: str) -> str:
 
     # Check if we're in a frozen environment (PyInstaller, etc.)
     if getattr(sys, "frozen", False):
-        # Running as compiled executable (PyInstaller)
+        # Running as compiled executable (PyInstaller or other)
         # sys._MEIPASS is set by PyInstaller to the temp extraction directory
         meipass = getattr(sys, "_MEIPASS", None)
         if meipass:
             base_path = Path(meipass)
             full_path = base_path / relative_path
             return str(full_path)
+        else:
+            # Frozen but no _MEIPASS - use executable directory
+            exe_path = Path(sys.executable).resolve()
+            base_path = exe_path.parent
+            full_path = base_path / relative_path
+            return str(full_path)
+
+    # Check if we're in a deployed Nuitka environment (standalone mode without frozen flag)
+    # In deployed builds, the module files are in a subdirectory next to the executable
+    file_path = Path(__file__).resolve()
+    exe_path = Path(sys.executable).resolve()
+    exe_parent = exe_path.parent
+
+    # Check if __file__ is inside a laser_gates subdirectory of the executable's directory
+    # This indicates a Nuitka standalone build where everything is bundled together
+    try:
+        # Get the relative path from exe_parent to file_path
+        rel_path = file_path.relative_to(exe_parent)
+        # Check if the first part is 'laser_gates' (the package directory)
+        is_nuitka_build = rel_path.parts[0] == "laser_gates"
+    except (ValueError, IndexError):
+        # relative_to raises ValueError if file_path is not relative to exe_parent
+        is_nuitka_build = False
+
+    if is_nuitka_build:
+        # Deployed environment - use executable directory
+        return str(exe_parent / relative_path)
 
     # Running as Python script
     # Find the project root (parent of src/)
