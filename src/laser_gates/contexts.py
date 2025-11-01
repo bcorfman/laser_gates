@@ -1,8 +1,12 @@
 """Context classes for passing read-only bundles of objects."""
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import arcade
+
+if TYPE_CHECKING:
+    from .waves import EnemyWave
 
 
 class WaveContext:
