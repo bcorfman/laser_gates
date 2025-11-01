@@ -76,7 +76,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.py
-          mode: standalone
+          mode: onefile
           output-file: lasergates
           static-libpython: "yes"
           nofollow-import-to: "*tk*,multiprocessing,gi"
@@ -94,7 +94,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.py
-          mode: standalone
+          mode: onefile
           output-file: lasergates
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions,laser_gates
