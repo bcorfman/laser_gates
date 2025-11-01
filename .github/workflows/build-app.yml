@@ -108,44 +108,32 @@ jobs:
         run: |
           set -euo pipefail
           echo "Searching for built Linux binary..."
-          BIN_DIR=$(find . -type d -name 'game.dist' | head -n1)
-          if [ -z "${BIN_DIR}" ]; then
-            echo "ERROR: No Linux dist directory found after build"
+          # List to help debugging when paths change
+          ls -laR . | head -n 500 || true
+          BIN=$(find . -maxdepth 4 -type f -name 'lasergates*' -perm -u+x | head -n1 || true)
+          if [ -z "${BIN}" ]; then
+            echo "ERROR: No Linux binary found after build"
             exit 1
           fi
-          echo "Found: ${BIN_DIR}"
-          # The onefile executable should be in the dist directory
-          if [ -f "${BIN_DIR}/lasergates" ]; then
-            mkdir -p build_output
-            cp "${BIN_DIR}/lasergates" build_output/laser_gates.bin
-            chmod +x build_output/laser_gates.bin
-            echo "Executable ready: build_output/laser_gates.bin"
-          else
-            echo "ERROR: Executable not found in ${BIN_DIR}"
-            ls -la "${BIN_DIR}"
-            exit 1
-          fi
+          echo "Found: ${BIN}"
+          mkdir -p build_output
+          cp "${BIN}" build_output/laser_gates.bin
+          chmod +x build_output/laser_gates.bin
+          echo "Executable ready: build_output/laser_gates.bin"
         shell: bash
 
       - name: Locate and rename executable (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           Write-Host "Searching for built Windows binary..."
-          $DistDir = Get-ChildItem -Recurse -Directory -Filter 'game.dist' | Select-Object -First 1
-          if ($null -eq $DistDir) {
-            Write-Error "ERROR: No Windows dist directory found after build"
-            exit 1
-          }
-          Write-Host ("Found: " + $DistDir.FullName)
-          # The onefile executable should be in the dist directory
-          $ExePath = Join-Path $DistDir.FullName "lasergates.exe"
-          if (Test-Path $ExePath) {
+          Get-ChildItem -Recurse -File -Filter 'lasergates*.exe' | Select-Object -First 1 | ForEach-Object {
+            Write-Host ("Found: " + $_.FullName)
             New-Item -ItemType Directory -Force -Path build_output | Out-Null
-            Copy-Item $ExePath "build_output\laser_gates.exe"
+            Copy-Item $_.FullName "build_output\laser_gates.exe"
             Write-Host "Executable ready: build_output\laser_gates.exe"
-          } else {
-            Write-Error "ERROR: Executable not found at $ExePath"
-            Get-ChildItem $DistDir.FullName
+          }
+          if (!(Test-Path build_output\laser_gates.exe)) {
+            Write-Error "ERROR: No Windows binary found after build"
             exit 1
           }
         shell: pwsh
