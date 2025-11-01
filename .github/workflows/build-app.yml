@@ -103,50 +103,58 @@ jobs:
           include-module: unicodedata
           windows-console-mode: force
 
-      - name: Zip Build Output (Linux)
+      - name: Locate and rename executable (Linux)
         if: matrix.os == 'ubuntu-22.04'
         run: |
           set -euo pipefail
-          echo "Searching for built Linux binary directory..."
-          # List to help debugging when paths change (disable pipefail temporarily)
-          set +o pipefail
-          ls -laR . | head -n 500 || true
-          set -o pipefail
+          echo "Searching for built Linux binary..."
           BIN_DIR=$(find . -type d -name 'game.dist' | head -n1)
           if [ -z "${BIN_DIR}" ]; then
             echo "ERROR: No Linux dist directory found after build"
-            echo "Searching for all .dist directories..."
-            find . -type d -name '*.dist' | head -n 5
             exit 1
           fi
           echo "Found: ${BIN_DIR}"
-          mkdir -p zip_output
-          cd "${BIN_DIR}"
-          zip -r "../../zip_output/lasergates-linux.zip" .
-          cd -
+          # The onefile executable should be in the dist directory
+          if [ -f "${BIN_DIR}/lasergates" ]; then
+            mkdir -p build_output
+            cp "${BIN_DIR}/lasergates" build_output/laser_gates.bin
+            chmod +x build_output/laser_gates.bin
+            echo "Executable ready: build_output/laser_gates.bin"
+          else
+            echo "ERROR: Executable not found in ${BIN_DIR}"
+            ls -la "${BIN_DIR}"
+            exit 1
+          fi
         shell: bash
 
-      - name: Zip Build Output (Windows)
+      - name: Locate and rename executable (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          Write-Host "Searching for built Windows binary directory..."
+          Write-Host "Searching for built Windows binary..."
           $DistDir = Get-ChildItem -Recurse -Directory -Filter 'game.dist' | Select-Object -First 1
           if ($null -eq $DistDir) {
             Write-Error "ERROR: No Windows dist directory found after build"
-            Write-Host "Searching for all .dist directories..."
-            Get-ChildItem -Recurse -Directory -Filter '*.dist' | Select-Object -First 5 | ForEach-Object { Write-Host $_.FullName }
             exit 1
           }
           Write-Host ("Found: " + $DistDir.FullName)
-          New-Item -ItemType Directory -Force -Path zip_output | Out-Null
-          Compress-Archive -Path "$($DistDir.FullName)\*" -DestinationPath "zip_output\lasergates-windows.zip" -Force
+          # The onefile executable should be in the dist directory
+          $ExePath = Join-Path $DistDir.FullName "lasergates.exe"
+          if (Test-Path $ExePath) {
+            New-Item -ItemType Directory -Force -Path build_output | Out-Null
+            Copy-Item $ExePath "build_output\laser_gates.exe"
+            Write-Host "Executable ready: build_output\laser_gates.exe"
+          } else {
+            Write-Error "ERROR: Executable not found at $ExePath"
+            Get-ChildItem $DistDir.FullName
+            exit 1
+          }
         shell: pwsh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}
-          path: zip_output/lasergates-${{ matrix.platform }}.zip
+          path: build_output/laser_gates.*
 
   release:
     runs-on: ubuntu-latest
@@ -176,4 +184,6 @@ jobs:
               --title "$TAG" \
               --notes "Automated build for $TAG"
           fi
-          gh release upload "$TAG" downloads/**/*.zip --clobber
+          # Upload the executables directly (no zip files)
+          gh release upload "$TAG" downloads/linux/laser_gates.bin --clobber
+          gh release upload "$TAG" downloads/windows/laser_gates.exe --clobber
