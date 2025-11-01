@@ -8,26 +8,57 @@ def get_resource_path(relative_path: str) -> str:
     """Get the absolute path to a resource file.
 
     Works both when running as a Python script and when compiled with Nuitka.
-    When frozen (Nuitka), resources are extracted to the temporary directory.
+
+    For Nuitka onefile mode:
+    - Data files are inside the onefile binary and extracted to __file__'s directory
+    - Use __file__ to locate resources that were included with include-data-dir
+
+    For Nuitka standalone mode:
+    - Resources are in the same directory as the executable
     """
-    # Check if we're in a frozen environment (PyInstaller, Nuitka, etc.)
+    # Check if running under Nuitka (onefile or standalone)
+    try:
+        # __compiled__ is only available in Nuitka-compiled code
+        import __compiled__  # type: ignore
+
+        # In onefile mode, resources are extracted to the same temp directory as Python modules
+        # __file__ will be something like: /tmp/onefile_xxx/laser_gates/config.py
+        # We need to go up to the extraction root: /tmp/onefile_xxx/
+        # Then access res/ from there
+
+        # Get the directory containing this module file
+        module_dir = Path(__file__).parent  # .../laser_gates/
+
+        # In Nuitka onefile, the structure is typically:
+        # temp_dir/
+        #   laser_gates/  (package)
+        #   res/          (data from include-data-dir)
+        # So we need to go up from laser_gates/ to temp_dir/
+        extraction_root = module_dir.parent
+        full_path = extraction_root / relative_path
+
+        return str(full_path)
+    except ImportError:
+        # Not running under Nuitka
+        pass
+
+    # Check if we're in a frozen environment (PyInstaller, etc.)
     if getattr(sys, "frozen", False):
-        # Running as compiled executable (Nuitka or PyInstaller)
-        # sys._MEIPASS is set by both PyInstaller and Nuitka to the temp extraction directory
+        # Running as compiled executable (PyInstaller or other)
+        # sys._MEIPASS is set by PyInstaller to the temp extraction directory
         meipass = getattr(sys, "_MEIPASS", None)
         if meipass:
             base_path = Path(meipass)
+            full_path = base_path / relative_path
+            return str(full_path)
         else:
-            # For Nuitka standalone, resources are in the same directory as the executable
+            # Frozen but no _MEIPASS - use executable directory
             exe_path = Path(sys.executable).resolve()
             base_path = exe_path.parent
+            full_path = base_path / relative_path
+            return str(full_path)
 
-        full_path = base_path / relative_path
-        # Resolve the path here to avoid arcade having to resolve it later
-        resolved_path = full_path.resolve(strict=False)
-        return str(resolved_path)
-
-    # Check if we're in a deployed Nuitka environment
+    # Check if we're in a deployed Nuitka environment (standalone mode without frozen flag)
     # In deployed builds, the module files are in a subdirectory next to the executable
     file_path = Path(__file__).resolve()
     exe_path = Path(sys.executable).resolve()
