@@ -51,23 +51,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Capture lib-dynload directory path (Linux)
-        if: matrix.os == 'ubuntu-22.04'
-        id: dynload_path
-        run: |
-          set -euo pipefail
-          LIB_DYNLOAD_DIR=$(python -c "import pathlib, sysconfig; path = pathlib.Path(sysconfig.get_path('stdlib')).resolve() / 'lib-dynload'; print(path)")
-          if [ ! -d "${LIB_DYNLOAD_DIR}" ]; then
-            echo "lib-dynload directory not found: ${LIB_DYNLOAD_DIR}" >&2
-            exit 1
-          fi
-          if find "${LIB_DYNLOAD_DIR}" -type f -print -quit >/dev/null; then
-            echo "lib_dynload_mapping=${LIB_DYNLOAD_DIR}=." >> "${GITHUB_OUTPUT}"
-          else
-            echo "lib_dynload_mapping=" >> "${GITHUB_OUTPUT}"
-            echo "lib-dynload directory is present but contains no files; skipping include." >&2
-          fi
-
       - name: Build Executable with Nuitka (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         uses: Nuitka/Nuitka-Action@main
@@ -82,9 +65,8 @@ jobs:
           nofollow-import-to: "*tk*,multiprocessing,gi"
           include-package: actions,laser_gates
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
-          include-data-dir: |
-            res=res
-            ${{ steps.dynload_path.outputs.lib_dynload_mapping }}
+          include-data-dir: res=res
+          include-module: unicodedata
 
       - name: Build Executable with Nuitka (Windows)
         if: matrix.os == 'windows-latest'
