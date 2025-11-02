@@ -50,12 +50,10 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          uv pip install --system .
+          uv pip install --system -e .
 
       - name: Build Executable with Nuitka
         uses: Nuitka/Nuitka-Action@main
-        env:
-          PYTHONPATH: ${{ github.workspace }}/src
         with:
           nuitka-version: main
           script-name: game.pyw
