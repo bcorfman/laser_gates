@@ -59,6 +59,7 @@ jobs:
           include-data-dir: res=res
           output-file: lasergates
           windows-console-mode: disable
+          static-libpython: "yes"
 
       - name: Locate and rename executable (Linux)
         if: matrix.os == 'ubuntu-22.04'
