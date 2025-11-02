@@ -38,17 +38,12 @@ class TestGetResourcePath:
         assert os.path.isabs(result)
 
     def test_frozen_without_meipass_nuitka_standalone(self):
-        """Test frozen build (Nuitka standalone) - simulates onefile extraction."""
+        """Test frozen build (Nuitka onefile) - simulates extraction."""
         # Simulate Nuitka onefile: temp_dir/laser_gates/config.py
         import laser_gates.config as cfg
 
         original_file = cfg.__file__
         try:
-            # Simulate __compiled__ being available (Nuitka compilation marker)
-            import sys
-            mock_compiled = type(sys)('__compiled__')
-            sys.modules['__compiled__'] = mock_compiled
-            
             # Patch __file__ to simulate Nuitka onefile extraction path
             cfg.__file__ = "/tmp/onefile_abc123/laser_gates/config.py"
             result = cfg.get_resource_path("res/dart.png")
@@ -59,9 +54,6 @@ class TestGetResourcePath:
             assert "/tmp/onefile_abc123/res/dart.png" == normalized_result
         finally:
             cfg.__file__ = original_file
-            # Remove the mock __compiled__ module
-            if '__compiled__' in sys.modules:
-                del sys.modules['__compiled__']
 
     def test_frozen_with_meipass_pyinstaller(self):
         """Test frozen build (PyInstaller) - deprecated, skip."""
