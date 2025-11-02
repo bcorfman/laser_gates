@@ -1,5 +1,6 @@
 """Game configuration constants."""
 
+import os
 import sys
 from pathlib import Path
 
@@ -15,11 +16,14 @@ def get_resource_path(relative_path: str) -> str:
 
     For Nuitka standalone mode:
     - Resources are in the same directory as the executable
+    
+    For Python development:
+    - Resources are in the project root, which is two levels up from config.py
     """
     # Check if running under Nuitka (onefile or standalone)
     try:
         # __compiled__ is only available in Nuitka-compiled code
-        import __compiled__  # type: ignore
+        import __compiled__  # type: ignore # noqa: F401
 
         # In onefile mode, resources are extracted to the same temp directory as Python modules
         # __file__ will be something like: /tmp/onefile_xxx/laser_gates/config.py
@@ -42,48 +46,13 @@ def get_resource_path(relative_path: str) -> str:
         # Not running under Nuitka
         pass
 
-    # Check if we're in a frozen environment (PyInstaller, etc.)
-    if getattr(sys, "frozen", False):
-        # Running as compiled executable (PyInstaller or other)
-        # sys._MEIPASS is set by PyInstaller to the temp extraction directory
-        meipass = getattr(sys, "_MEIPASS", None)
-        if meipass:
-            base_path = Path(meipass)
-            full_path = base_path / relative_path
-            return str(full_path)
-        else:
-            # Frozen but no _MEIPASS - use executable directory
-            exe_path = Path(sys.executable).resolve()
-            base_path = exe_path.parent
-            full_path = base_path / relative_path
-            return str(full_path)
-
-    # Check if we're in a deployed Nuitka environment (standalone mode without frozen flag)
-    # In deployed builds, the module files are in a subdirectory next to the executable
-    file_path = Path(__file__).resolve()
-    exe_path = Path(sys.executable).resolve()
-    exe_parent = exe_path.parent
-
-    # Check if __file__ is inside a laser_gates subdirectory of the executable's directory
-    # This indicates a Nuitka standalone build where everything is bundled together
-    try:
-        # Get the relative path from exe_parent to file_path
-        rel_path = file_path.relative_to(exe_parent)
-        # Check if the first part is 'laser_gates' (the package directory)
-        is_nuitka_build = rel_path.parts[0] == "laser_gates"
-    except (ValueError, IndexError):
-        # relative_to raises ValueError if file_path is not relative to exe_parent
-        is_nuitka_build = False
-
-    if is_nuitka_build:
-        # Deployed environment - use executable directory
-        return str(exe_parent / relative_path)
-
     # Running as Python script
     # Find the project root (parent of src/)
+    # __file__ is: project_root/src/laser_gates/config.py
     script_dir = Path(__file__).parent  # src/laser_gates
     project_root = script_dir.parent.parent  # project root
-    return str(project_root / relative_path)
+    full_path = project_root / relative_path
+    return str(full_path)
 
 
 # Window and world dimensions
