@@ -38,30 +38,24 @@ class TestGetResourcePath:
         assert os.path.isabs(result)
 
     def test_frozen_without_meipass_nuitka_standalone(self):
-        """Test frozen build (Nuitka standalone) - simulates onefile extraction."""
+        """Test frozen build (Nuitka onefile) - simulates extraction."""
         # Simulate Nuitka onefile: temp_dir/laser_gates/config.py
         import laser_gates.config as cfg
 
         original_file = cfg.__file__
         try:
-            # Simulate __compiled__ being available (Nuitka compilation marker)
-            import sys
-            mock_compiled = type(sys)('__compiled__')
-            sys.modules['__compiled__'] = mock_compiled
-            
             # Patch __file__ to simulate Nuitka onefile extraction path
             cfg.__file__ = "/tmp/onefile_abc123/laser_gates/config.py"
             result = cfg.get_resource_path("res/dart.png")
 
             # Should go up to /tmp/onefile_abc123 and find res/dart.png
+            # Normalize paths for cross-platform compatibility
             normalized_result = result.replace(os.sep, "/").replace("\\", "/")
             assert normalized_result.endswith("res/dart.png")
-            assert "/tmp/onefile_abc123/res/dart.png" == normalized_result
+            # Match the expected path ending (handles Windows drive letters)
+            assert normalized_result == "/tmp/onefile_abc123/res/dart.png" or normalized_result.endswith("/onefile_abc123/res/dart.png")
         finally:
             cfg.__file__ = original_file
-            # Remove the mock __compiled__ module
-            if '__compiled__' in sys.modules:
-                del sys.modules['__compiled__']
 
     def test_frozen_with_meipass_pyinstaller(self):
         """Test frozen build (PyInstaller) - deprecated, skip."""

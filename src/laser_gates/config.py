@@ -1,58 +1,35 @@
 """Game configuration constants."""
 
 import os
-import sys
-from pathlib import Path
 
 
 def get_resource_path(relative_path: str) -> str:
     """Get the absolute path to a resource file.
 
     Works both when running as a Python script and when compiled with Nuitka.
-
-    For Nuitka onefile mode:
-    - Data files are inside the onefile binary and extracted to __file__'s directory
-    - Use __file__ to locate resources that were included with include-data-dir
-
-    For Nuitka standalone mode:
-    - Resources are in the same directory as the executable
     
-    For Python development:
-    - Resources are in the project root, which is two levels up from config.py
+    Uses the same pattern as Game of Life:
+    - Get the directory where this module is located
+    - Go up to find the base directory (project root or extraction root)
+    - Join with the relative path
     """
-    # Check if running under Nuitka (onefile or standalone)
-    try:
-        # __compiled__ is only available in Nuitka-compiled code
-        import __compiled__  # type: ignore # noqa: F401
-
-        # In onefile mode, resources are extracted to the same temp directory as Python modules
-        # __file__ will be something like: /tmp/onefile_xxx/laser_gates/config.py
-        # We need to go up to the extraction root: /tmp/onefile_xxx/
-        # Then access res/ from there
-
-        # Get the directory containing this module file
-        module_dir = Path(__file__).parent  # .../laser_gates/
-
-        # In Nuitka onefile, the structure is typically:
-        # temp_dir/
-        #   laser_gates/  (package)
-        #   res/          (data from include-data-dir)
-        # So we need to go up from laser_gates/ to temp_dir/
-        extraction_root = module_dir.parent
-        full_path = extraction_root / relative_path
-
-        return str(full_path)
-    except ImportError:
-        # Not running under Nuitka
-        pass
-
-    # Running as Python script
-    # Find the project root (parent of src/)
-    # __file__ is: project_root/src/laser_gates/config.py
-    script_dir = Path(__file__).parent  # src/laser_gates
-    project_root = script_dir.parent.parent  # project root
-    full_path = project_root / relative_path
-    return str(full_path)
+    # Get the directory where this module is located
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Go up to the base directory
+    # In Nuitka onefile: temp_dir/laser_gates/ -> temp_dir/
+    # In development: project_root/src/laser_gates/ -> project_root/src/ -> project_root/
+    base_dir = os.path.dirname(module_dir)
+    
+    # Check if we're in a src/ directory structure (development mode)
+    if os.path.basename(base_dir) == 'src':
+        # Go up one more level to get to project root
+        base_dir = os.path.dirname(base_dir)
+    
+    # Join with the relative path
+    full_path = os.path.join(base_dir, relative_path)
+    
+    return full_path
 
 
 # Window and world dimensions
