@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -e .
+          pip install .
 
       - name: Build Executable with Nuitka
         uses: Nuitka/Nuitka-Action@main
