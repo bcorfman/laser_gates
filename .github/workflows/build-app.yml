@@ -53,11 +53,10 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.pyw
+          mode: onefile
           nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
-          include-package: actions,laser_gates
-          mode: onefile
           output-file: lasergates
           windows-console-mode: disable
 
