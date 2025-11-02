@@ -36,6 +36,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: "x64"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -47,29 +48,22 @@ jobs:
       - uses: seanmiddleditch/gha-setup-vsdevenv@master
         if: matrix.os == 'windows-latest'
 
-      - name: Set env repo name
-        run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
-        shell: bash
-
       - name: Install Dependencies
         run: |
           uv pip install --system .
 
-      - name: Build Executable with Nuitka (Ubuntu)
-        if: matrix.os == 'ubuntu-22.04'
+      - name: Build Executable with Nuitka
         uses: Nuitka/Nuitka-Action@main
         env:
           PYTHONPATH: ${{ github.workspace }}/src
         with:
           nuitka-version: main
           script-name: game.pyw
-          static-libpython: "yes"
-          mode: onefile
-          nofollow-import-to: "*tk*,multiprocessing,gi"
+          nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
           include-package: actions,laser_gates
-          include-module: unicodedata
+          mode: onefile
           output-file: lasergates
 
       - name: Build Executable with Nuitka (Windows)
