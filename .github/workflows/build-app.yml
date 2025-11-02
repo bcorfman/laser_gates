@@ -58,7 +58,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/src
         with:
           nuitka-version: main
-          script-name: game.py
+          script-name: game.pyw
           mode: onefile
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
@@ -73,7 +73,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/src
         with:
           nuitka-version: main
-          script-name: game.py
+          script-name: game.pyw
           mode: onefile
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
