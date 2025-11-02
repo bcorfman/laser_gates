@@ -49,9 +49,11 @@ class TestGetResourcePath:
             result = cfg.get_resource_path("res/dart.png")
 
             # Should go up to /tmp/onefile_abc123 and find res/dart.png
+            # Normalize paths for cross-platform compatibility
             normalized_result = result.replace(os.sep, "/").replace("\\", "/")
             assert normalized_result.endswith("res/dart.png")
-            assert "/tmp/onefile_abc123/res/dart.png" == normalized_result
+            # Match the expected path ending (handles Windows drive letters)
+            assert normalized_result == "/tmp/onefile_abc123/res/dart.png" or normalized_result.endswith("/onefile_abc123/res/dart.png")
         finally:
             cfg.__file__ = original_file
 
