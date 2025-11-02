@@ -80,3 +80,6 @@ extend-fixable = ["E", "F", "UP", "B", "SIM", "I"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/laser_gates"]
