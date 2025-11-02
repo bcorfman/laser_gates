@@ -1,13 +1,11 @@
 """Application window and runner."""
 
 import logging
-import os
-import platform
 
 # Configure Pyglet before importing Arcade
 import pyglet
 
-pyglet.options['shadow_window'] = False  # Fix double window issue on Wayland
+pyglet.options["shadow_window"] = False  # Fix double window issue on Wayland
 pyglet.options.debug_gl = False
 
 import arcade

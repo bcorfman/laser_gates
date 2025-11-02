@@ -48,23 +48,23 @@ jobs:
           sudo apt-get install -y xvfb x11-utils libxkbcommon-x11-0 libgl1 libglu1-mesa mesa-utils
           /sbin/start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
 
-      - name: Smoke test game.py (Linux Python 3.11 only)
+      - name: Smoke test game.pyw (Linux Python 3.11 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         env:
           DISPLAY: ':99.0'
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          echo "Running game.py for 10s"
+          echo "Running game.pyw for 10s"
           set +e
-          timeout 10s uv run python game.py
+          timeout 10s uv run python game.pyw
           rc=$?
           set -e
           if [ $rc -eq 124 ]; then
-            echo "OK: game.py ran and timed out after 10s as expected"
+            echo "OK: game.pyw ran and timed out after 10s as expected"
           elif [ $rc -eq 0 ]; then
-            echo "OK: game.py exited cleanly within 10s"
+            echo "OK: game.pyw exited cleanly within 10s"
           else
-            echo "FAIL: game.py exited with $rc"
+            echo "FAIL: game.pyw exited with $rc"
             exit $rc
           fi
 

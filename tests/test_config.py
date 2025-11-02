@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +13,7 @@ class TestGetResourcePath:
 
     def test_normal_development_environment(self):
         """Test resource path resolution in normal Python environment."""
-        # This simulates running as: python -m game or python game.py
+        # This simulates running as: python -m game or python game.pyw
         # __file__ points to src/laser_gates/config.py
         result = config.get_resource_path("res/dart.png")
 
@@ -53,7 +52,9 @@ class TestGetResourcePath:
             normalized_result = result.replace(os.sep, "/").replace("\\", "/")
             assert normalized_result.endswith("res/dart.png")
             # Match the expected path ending (handles Windows drive letters)
-            assert normalized_result == "/tmp/onefile_abc123/res/dart.png" or normalized_result.endswith("/onefile_abc123/res/dart.png")
+            assert normalized_result == "/tmp/onefile_abc123/res/dart.png" or normalized_result.endswith(
+                "/onefile_abc123/res/dart.png"
+            )
         finally:
             cfg.__file__ = original_file
 

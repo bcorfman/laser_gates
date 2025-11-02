@@ -7,7 +7,7 @@ def get_resource_path(relative_path: str) -> str:
     """Get the absolute path to a resource file.
 
     Works both when running as a Python script and when compiled with Nuitka.
-    
+
     Uses the same pattern as Game of Life:
     - Get the directory where this module is located
     - Go up to find the base directory (project root or extraction root)
@@ -15,20 +15,20 @@ def get_resource_path(relative_path: str) -> str:
     """
     # Get the directory where this module is located
     module_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     # Go up to the base directory
     # In Nuitka onefile: temp_dir/laser_gates/ -> temp_dir/
     # In development: project_root/src/laser_gates/ -> project_root/src/ -> project_root/
     base_dir = os.path.dirname(module_dir)
-    
+
     # Check if we're in a src/ directory structure (development mode)
-    if os.path.basename(base_dir) == 'src':
+    if os.path.basename(base_dir) == "src":
         # Go up one more level to get to project root
         base_dir = os.path.dirname(base_dir)
-    
+
     # Join with the relative path
     full_path = os.path.join(base_dir, relative_path)
-    
+
     return full_path
 
 
