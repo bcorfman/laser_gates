@@ -1,5 +1,15 @@
 """Application window and runner."""
 
+import logging
+import os
+import platform
+
+# Configure Pyglet before importing Arcade
+import pyglet
+
+pyglet.options['shadow_window'] = False  # Fix double window issue on Wayland
+pyglet.options.debug_gl = False
+
 import arcade
 from actions import center_window
 
@@ -9,8 +19,6 @@ from .view import Tunnel
 
 class LaserGates(arcade.Window):
     def __init__(self):
-        import logging
-
         logger = logging.getLogger(__name__)
 
         logger.debug("Initializing LaserGates window")
@@ -24,11 +32,14 @@ class LaserGates(arcade.Window):
             logger.debug("Centering window")
             center_window(self)
 
-            # Now make the window visible and proceed normally.
-            logger.debug("Showing window and view")
-            self.set_visible(True)
+            # Create and show the Tunnel view while still hidden
             logger.debug("Creating Tunnel view")
             self.show_view(Tunnel())
+
+            # Now make the window visible after all setup is complete
+            # This helps prevent double window on Wayland
+            logger.debug("Showing window")
+            self.set_visible(True)
             logger.debug("Window initialization complete")
         except Exception:
             logger.exception("Error initializing window")
