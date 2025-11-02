@@ -59,6 +59,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: game.pyw
+          static-libpython: "yes"
           mode: onefile
           nofollow-import-to: "*tk*,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
@@ -80,6 +81,7 @@ jobs:
           include-data-dir: res=res
           include-package: actions,laser_gates
           output-file: lasergates
+          windows-console-mode: disable
 
       - name: Locate and rename executable (Linux)
         if: matrix.os == 'ubuntu-22.04'
