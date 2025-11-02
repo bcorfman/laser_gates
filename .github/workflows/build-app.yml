@@ -65,6 +65,7 @@ jobs:
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
           include-data-dir: res=res
           include-package: actions,laser_gates
+          include-module: unicodedata
           output-file: lasergates
 
       - name: Build Executable with Nuitka (Windows)
