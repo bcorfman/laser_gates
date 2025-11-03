@@ -48,8 +48,22 @@ jobs:
         run: |
           pip install .
 
-      - name: Build Executable with Nuitka
+      - name: Build Executable with Nuitka (Linux)
         uses: Nuitka/Nuitka-Action@main
+        if: matrix.os == 'ubuntu-22.04'
+        with:
+          nuitka-version: main
+          script-name: game.pyw
+          mode: onefile
+          nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
+          disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
+          include-data-dir: res=res
+          output-file: lasergates
+          static-libpython: "yes"
+
+      - name: Build Executable with Nuitka (Windows)
+        uses: Nuitka/Nuitka-Action@main
+        if: matrix.os == 'windows-latest'
         with:
           nuitka-version: main
           script-name: game.pyw
@@ -59,7 +73,6 @@ jobs:
           include-data-dir: res=res
           output-file: lasergates
           windows-console-mode: disable
-          static-libpython: "yes"
 
       - name: Locate and rename executable (Linux)
         if: matrix.os == 'ubuntu-22.04'
