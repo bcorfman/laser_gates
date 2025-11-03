@@ -57,10 +57,11 @@ jobs:
           mode: onefile
           nofollow-import-to: "*tk*,_codecs,encodings,multiprocessing,gi"
           disable-plugins: tk-inter,dill-compat,eventlet,gevent,pyqt5,pyqt6,pyside2,pyside6,delvewheel,pywebview,matplotlib,spacy,enum-compat,pbr-compat,gevent,pmw-freezer,transformers,upx,kivy,options-nanny,multiprocessing,gi
-          include-module: math,random,ctypes,statistics,time,struct,itertools,collections,mmap,binascii,pickle,copy,functools,operator,hashlib,zlib,gzip
+          include-module: math,random,ctypes,_ctypes,statistics,time,struct,itertools,collections,mmap,binascii,pickle,copy,functools,operator,hashlib,zlib,gzip
+          no-deployment-flag: ctypes
           include-data-dir: res=res
           output-file: lasergates
-          static-libpython: "yes"
+          static-libpython: "auto"
 
       - name: Build Executable with Nuitka (Windows)
         uses: Nuitka/Nuitka-Action@main
