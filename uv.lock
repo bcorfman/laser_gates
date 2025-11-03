@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 
 [[package]]
@@ -19,7 +19,7 @@ wheels = [
 
 [[package]]
 name = "arcade-actions"
-version = "0.10.5"
+version = "0.10.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arcade" },
@@ -27,9 +27,9 @@ dependencies = [
     { name = "pysdl2" },
     { name = "screeninfo" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/2e/b9c51ddf76658ca50bdd9e13794cded49452274f7ddfc215695cacd0807e/arcade_actions-0.10.5.tar.gz", hash = "sha256:48261c0a5432e5ecf4e9afc3c1877ac1d3030e75b68b54f6d3837f30df5c18fa", size = 471329, upload-time = "2025-11-03T03:30:23.71Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/b1/0b8a20d9fa8ec4d1578b2fe58b1c5a609ae566ecf11b70dec07933ce1e07/arcade_actions-0.10.7.tar.gz", hash = "sha256:23ed46fc60c4ea47cc2b1e5daffbacd3411a68659eb24a952693ded9128505ce", size = 471362, upload-time = "2025-11-03T15:45:55.67Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/de/b7be3ea335f368a9de665c924d7c449cac00cd36ca8598cb946b60e1af27/arcade_actions-0.10.5-py3-none-any.whl", hash = "sha256:6ef0fd9f6a59645cd398ecdca581fbff7177b0e656016bb7b1c009e378e90ecb", size = 73969, upload-time = "2025-11-03T03:30:22.054Z" },
+    { url = "https://files.pythonhosted.org/packages/17/92/0f35fadc25360db327b0a5dc8593d392454c6dea779cbb41196dff529925/arcade_actions-0.10.7-py3-none-any.whl", hash = "sha256:445dbc41c3968a7d4f492a8d194b4e2186e08f3710e8a39e71f77557bebd7111", size = 74004, upload-time = "2025-11-03T15:45:54.67Z" },
 ]
 
 [[package]]
