@@ -61,7 +61,7 @@ jobs:
           no-deployment-flag: ctypes
           include-data-dir: res=res
           output-file: lasergates
-          static-libpython: "auto"
+          static-libpython: "yes"
 
       - name: Build Executable with Nuitka (Windows)
         uses: Nuitka/Nuitka-Action@main
