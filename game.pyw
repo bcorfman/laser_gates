@@ -25,13 +25,12 @@ def setup_logging():
     # Place log file directly next to executable
     log_file = exe_dir / "game.log"
 
-    # Configure logging to write to both file and stderr
+    # Configure logging to write to file only
     logging.basicConfig(
         level=logging.DEBUG,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(log_file, encoding="utf-8"),
-            logging.StreamHandler(sys.stderr),  # Still try to log to stderr if possible
         ],
     )
 
