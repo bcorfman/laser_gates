@@ -69,11 +69,12 @@ jobs:
           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
           
-          # Find the standalone directory (Nuitka creates lasergates.dist)
-          STANDALONE_DIR=$(find . -type d \( -name "lasergates.dist" -o -name "lasergates.build" \) | head -n1)
+          # Find the standalone directory (Nuitka creates game.dist based on script name)
+          STANDALONE_DIR=$(find . -type d \( -name "game.dist" -o -name "game.build" \) | head -n1)
           if [ -z "${STANDALONE_DIR}" ]; then
             echo "ERROR: Could not find standalone directory"
-            find . -type d -name "*lasergates*" | head -10
+            echo "Searching for all .dist directories..."
+            find . -type d -name "*.dist" | head -10
             exit 1
           fi
           
