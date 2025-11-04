@@ -8,8 +8,9 @@ On Windows:
 
 On Ubuntu Linux (22.04 and later):
 * Download laser_gates.AppImage from the [release page](https://github.com/bcorfman/laser_gates/releases).
-* In your terminal, navigate to your Downloads folder, and type `.\laser_gates.AppImage` to run it.
+* In your terminal, navigate to your Downloads folder, and type `./laser_gates.AppImage` to run it.
+  * If you don't have FUSE installed, use `./laser_gates.AppImage --appimage-extract-and-run` instead.
 
 Directions:
 * The arrow keys (left, right, up, down) move your ship.
-* Left-Ctrl key fires.
+* Left-CTRL key fires.
