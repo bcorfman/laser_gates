@@ -116,7 +116,7 @@ jobs:
           chmod +x laser_gates.AppDir/AppRun
           
           # Create AppImage using extracted appimagetool
-          ARCH=x86_64 ./squashfs-root/AppRun laser_gates.AppDir laser_gates.AppImage
+          ARCH=x86_64 ./squashfs-root/AppRun --no-appstream laser_gates.AppDir laser_gates.AppImage
           
           # Verify AppImage was created
           if [ ! -f laser_gates.AppImage ]; then
