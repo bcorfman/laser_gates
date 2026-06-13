@@ -2,6 +2,7 @@
 
 import sys
 import types
+
 import pytest
 
 
@@ -10,6 +11,7 @@ def stub_arcade_if_needed(monkeypatch):
     """Stub arcade module if it's not available (e.g., in CI without graphics)."""
     try:
         import arcade  # noqa: F401
+
         # Arcade is available, don't stub
         yield
     except ImportError:
@@ -89,6 +91,7 @@ def stub_actions_if_needed(monkeypatch):
     """Stub actions module if it's not available."""
     try:
         import actions  # noqa: F401
+
         # Actions module is available, don't stub
         yield
     except ImportError:
@@ -142,4 +145,3 @@ def stub_actions_if_needed(monkeypatch):
         if "actions" in sys.modules and not hasattr(sys.modules["actions"], "__file__"):
             # Only remove if it's our stub (real modules have __file__)
             del sys.modules["actions"]
-

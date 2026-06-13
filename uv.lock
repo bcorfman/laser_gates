@@ -18,7 +18,7 @@ wheels = [
 ]
 
 [[package]]
-name = "arcade-actions"
+name = "arcadeactions"
 version = "0.10.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
@@ -243,7 +243,7 @@ name = "laser-gates"
 version = "0.3.0"
 source = { editable = "." }
 dependencies = [
-    { name = "arcade-actions" },
+    { name = "arcadeactions" },
 ]
 
 [package.dev-dependencies]
@@ -254,7 +254,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "arcade-actions", specifier = ">=0.10.2" }]
+requires-dist = [{ name = "arcadeactions", specifier = ">=0.10.2" }]
 provides-extras = ["devarc"]
 
 [package.metadata.requires-dev]

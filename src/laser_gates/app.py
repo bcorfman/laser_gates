@@ -9,8 +9,8 @@ pyglet.options["shadow_window"] = False  # Fix double window issue on Wayland
 pyglet.options.debug_gl = False
 
 import arcade
-from actions import center_window
 
+from .actions import center_window
 from .config import WINDOW_HEIGHT, WINDOW_WIDTH
 from .view import Tunnel
 

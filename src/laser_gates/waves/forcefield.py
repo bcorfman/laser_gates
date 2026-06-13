@@ -239,7 +239,7 @@ class FlexingForcefieldWave(ForcefieldWave):
 
         # Only set up Y-bounce actions once (on the last iteration)
         if i == self._total_forcefields - 1:
-            # Vertical bounces – apply to their own mid-bars only
+            # TRICKY: bounds are based on the midpoint of the forcefield, not the top or bottom
             bounce_top = MoveYUntil(
                 velocity=(0, -2),
                 condition=infinite,
@@ -322,3 +322,99 @@ class FlexingForcefieldWave(ForcefieldWave):
         self._last_forcefield.visible = False
         self._current_color_index = 0
         self._actions.clear()
+
+
+class GapForcefieldWave(ForcefieldWave):
+    def __init__(self, total_forcefields):
+        super().__init__(total_forcefields)
+
+    def _position_forcefield(self, i: int):
+        self._bottom_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+        self._bottom_forcefields[i].bottom = TUNNEL_WALL_HEIGHT
+        self._bottom_mid_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+        self._bottom_mid_forcefields[i].bottom = TUNNEL_WALL_HEIGHT
+        self._top_mid_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+        self._top_mid_forcefields[i].bottom = TUNNEL_WALL_HEIGHT + 48
+        self._top_forcefields[i].left = WINDOW_WIDTH + WALL_WIDTH + i * self._forcefield_spacing
+        self._top_forcefields[i].bottom = TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109 * 2
+
+    def _setup_forcefield_action(self, i: int, vel: int, ctx: WaveContext):
+        # Horizontal scroll (all four bars in this slice)
+        # Only attach cleanup callback to the LAST forcefield
+        def cleanup_wrapper(s, axis, side):
+            # Only cleanup when hitting the LEFT boundary (sprites scrolling off-screen)
+            if axis == "x" and side == "left":
+                ctx.on_cleanup(self)
+
+        on_boundary_callback = cleanup_wrapper if i == self._total_forcefields - 1 else None
+
+        # move left until the forcefield is off-screen
+        scroll_x = MoveXUntil(
+            velocity=(vel, 0),  # vel is already negative
+            condition=infinite,
+            bounds=(
+                -WALL_WIDTH,
+                0,
+                WINDOW_WIDTH + WALL_WIDTH + self._forcefield_spacing * self._total_forcefields,
+                WINDOW_HEIGHT,
+            ),
+            boundary_behavior="limit",
+            on_boundary_enter=on_boundary_callback,
+        )
+
+        # Apply X scroll to the correct sprite-list slice
+        target = self._initial_forcefields if i < self._total_forcefields - 1 else self._last_forcefield
+        scroll_x.apply(target)
+        self._actions.append(scroll_x)
+        self._scroll_actions.append(scroll_x)  # Track horizontal scroll action for velocity updates
+
+        # Only set up Y-shift actions once (on the last iteration)
+        if i == self._total_forcefields - 1:
+            # TRICKY: bounds are based on the midpoint of the forcefield, not the top or bottom
+            bounce_top = MoveYUntil(
+                velocity=(0, -2),
+                condition=infinite,
+                bounds=(
+                    -WALL_WIDTH,
+                    TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109 + 109 / 2,
+                    WINDOW_WIDTH + WALL_WIDTH + self._forcefield_spacing * self._total_forcefields,
+                    TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109 * 2 + 109 / 2,
+                ),
+                boundary_behavior="bounce",
+                on_boundary_enter=lambda sprite, axis, side: ctx.on_cleanup(self),
+            )
+            bounce_top.apply(self._top_mid_forcefields)
+
+            bounce_bottom = MoveYUntil(
+                velocity=(0, 2),
+                condition=infinite,
+                bounds=(
+                    -WALL_WIDTH,
+                    TUNNEL_WALL_HEIGHT + HILL_HEIGHT - 109 / 2,
+                    WINDOW_WIDTH + WALL_WIDTH + self._forcefield_spacing * self._total_forcefields,
+                    TUNNEL_WALL_HEIGHT + HILL_HEIGHT + 109 / 2,
+                ),
+                boundary_behavior="bounce",
+                on_boundary_enter=lambda sprite, axis, side: ctx.on_cleanup(self),
+            )
+            bounce_bottom.apply(self._bottom_mid_forcefields)
+
+            self._actions.extend([bounce_top, bounce_bottom])
+            self._add_color_update_callback()
+            self._add_middle_animation_actions()
+
+    def build(self, ctx: WaveContext) -> arcade.SpriteList:
+        """Populate enemy sprites and add actions (move_until, etc.)."""
+        current_velocity = TUNNEL_VELOCITY * ctx.player_ship.speed_factor
+        for i in range(self._total_forcefields):
+            self._position_forcefield(i)
+        for i in range(self._total_forcefields - 2, self._total_forcefields):
+            self._setup_forcefield_action(i, current_velocity, ctx)
+
+        self._initial_forcefields.visible = True
+        self._last_forcefield.visible = True
+
+        return arcade.SpriteList()  # Forcefield waves manage their own sprite lists
+
+    def add_draw_order(self) -> list[tuple[int, arcade.SpriteList]]:
+        pass

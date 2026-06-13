@@ -3,7 +3,6 @@
 import types
 
 import arcade
-import pytest
 
 from laser_gates.contexts import WaveContext
 
@@ -72,9 +71,9 @@ class TestDensePackWave:
 
         assert final_active_count == 0, "All sprites should be released from active pool"
         assert final_inactive_count > initial_inactive_count, "Sprites should be returned to inactive pool"
-        assert final_inactive_count == initial_inactive_count + initial_active_count, (
-            "All acquired sprites should be returned"
-        )
+        assert (
+            final_inactive_count == initial_inactive_count + initial_active_count
+        ), "All acquired sprites should be returned"
 
     def test_scroll_actions_tracked_for_velocity_updates(self):
         """Test that scroll actions are tracked for velocity updates (Test 4)."""
@@ -90,9 +89,7 @@ class TestDensePackWave:
         # Verify we can update velocity (this tests the tracking mechanism)
         # The action should have a set_current_velocity method
         for action in wave._scroll_actions:
-            assert hasattr(action, "set_current_velocity"), (
-                "Scroll actions should support velocity updates"
-            )
+            assert hasattr(action, "set_current_velocity"), "Scroll actions should support velocity updates"
 
         # Test that update_scroll_velocity doesn't crash
         wave.update_scroll_velocity(-3.0)
@@ -171,4 +168,3 @@ class TestFlashingForcefieldWave:
 
         assert len(damage_tracker["amounts"]) == 0, "Damage should NOT be registered when forcefields are inactive"
         assert not cleanup_tracker["called"], "Cleanup should NOT be triggered when forcefields are inactive"
-

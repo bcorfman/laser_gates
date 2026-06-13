@@ -13,7 +13,7 @@ license = {file="LICENSE"}
 readme = "README.md"
 requires-python = ">= 3.11"
 dependencies = [
-    "arcade-actions>=0.10.2",
+    "arcadeactions>=0.10.2",
 ]
 
 [dependency-groups]
